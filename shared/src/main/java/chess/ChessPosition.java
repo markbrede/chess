@@ -28,15 +28,7 @@ public class ChessPosition {
      * @return which column this position is in
      * 1 codes for the left row
      */
-    public int getColumn() {
+    public int getColumn(){
         return col;
-    }
-
-    /**
-     * @return a string representation of the chess position to help me when implementing tests
-     */
-    @Override
-    public String toString() {
-        return String.format("%c%d", (char)('a' + col - 1), row);
     }
 }
