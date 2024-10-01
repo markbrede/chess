@@ -10,7 +10,7 @@ import java.util.List;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-//the chesspiece class representing a sing piece
+//the ChessPiece class representing a sing piece
 public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
@@ -56,7 +56,7 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        // Place holder for the function that calcs moves. I am going to implement this later with specific move logic
+        // Place-holder for the function that calculates moves. I am going to implement this later with specific move logic
         return new ArrayList<>();
     }
 }
