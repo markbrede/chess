@@ -6,6 +6,8 @@ package chess;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
+
+// added matrix for chess board
 public class ChessBoard {
     private ChessPiece[][] squares = new ChessPiece[8][8];
     public ChessBoard() {
