@@ -51,6 +51,79 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        return new ArrayList<>();
+        Collection<ChessMove> moves = new ArrayList<>();
+
+        if (this.type == PieceType.BISHOP) {
+            moves.addAll(getBishopMoves(board, myPosition));
+        }
+        // Handle other piece types...
+
+        return moves;
     }
+
+    private Collection<ChessMove> getBishopMoves(ChessBoard board, ChessPosition myPosition) {
+        Collection<ChessMove> bishopMoves = new ArrayList<>();
+        int[][] directions = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}; // Diagonal directions
+
+        for (int[] direction : directions) {
+            int row = myPosition.getRow();
+            int col = myPosition.getColumn();
+
+            while (true) {
+                row += direction[0];
+                col += direction[1];
+
+                if (row < 1 || row > 8 || col < 1 || col > 8) {
+                    break; // Out of bounds
+                }
+
+                ChessPosition newPosition = new ChessPosition(row, col);
+                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
+                if (pieceAtNewPosition == null) {
+                    bishopMoves.add(new ChessMove(myPosition, newPosition, null));
+                } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
+                    bishopMoves.add(new ChessMove(myPosition, newPosition, null));
+                    break; // Can't move past an enemy piece
+                } else {
+                    break; // Can't move past a friendly piece
+                }
+            }
+        }
+
+        return bishopMoves;
+    }
+
+
+    //TOSTRING METHOD
+    @Override
+    public String toString() {
+        char pieceChar;
+        switch (type) {
+            case KING -> pieceChar = 'K';
+            case QUEEN -> pieceChar = 'Q';
+            case BISHOP -> pieceChar = 'B';
+            case KNIGHT -> pieceChar = 'N';
+            case ROOK -> pieceChar = 'R';
+            case PAWN -> pieceChar = 'P';
+            default -> pieceChar = '?';
+        }
+        return pieceColor == ChessGame.TeamColor.WHITE ?
+                String.valueOf(pieceChar) :
+                String.valueOf(Character.toLowerCase(pieceChar));
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

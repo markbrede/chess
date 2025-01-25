@@ -7,9 +7,9 @@ package chess;
  * signature of the existing methods.
  */
 
-// added matrix for chess board
+
 public class ChessBoard {
-    private ChessPiece[][] squares = new ChessPiece[8][8];
+    private ChessPiece[][] squares = new ChessPiece[8][8]; //Added field matrix for chess board
     public ChessBoard() {
         
     }
@@ -20,6 +20,8 @@ public class ChessBoard {
      * @param position where to add the piece to
      * @param piece    the piece to add
      */
+
+    //the position and piece parameter
     public void addPiece(ChessPosition position, ChessPiece piece) {
         squares[position.getRow()][position.getColumn()] = piece;
     }
@@ -41,5 +43,19 @@ public class ChessBoard {
      */
     public void resetBoard() {
         throw new RuntimeException("Not implemented");
+    }
+
+    //TOSTRING METHOD
+    @Override
+    public String toString() {
+        StringBuilder board = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                ChessPiece piece = squares[i][j];
+                board.append(piece == null ? "." : piece).append(" ");
+            }
+            board.append("\n");
+        }
+        return board.toString();
     }
 }

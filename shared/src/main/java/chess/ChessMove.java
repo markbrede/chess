@@ -41,4 +41,14 @@ public class ChessMove {
     public ChessPiece.PieceType getPromotionPiece() {
         return promoPiece;
     }
+
+
+    //TOSTRING METHOD
+    @Override
+    public String toString() {
+        return String.format("(%d,%d) -> (%d,%d)%s",
+                startPos.getRow(), startPos.getColumn(),
+                endPos.getRow(), endPos.getColumn(),
+                promoPiece != null ? " promotion: " + promoPiece : "");
+    }
 }

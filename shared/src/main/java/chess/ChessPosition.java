@@ -8,12 +8,12 @@ package chess;
  */
 public class ChessPosition {
 
-    private int row; //Added
-    private int col;//Added
+    private int row; // row and col fields created to bind parameters to fields
+    private int col;
 
     public ChessPosition(int row, int col) {
-        this.row = row;//Added this.row = row;
-        this.col = col;//Added this.col = col;
+        this.row = row; //setting constructors = to parameters
+        this.col = col;
     }
 
     /**
