@@ -66,14 +66,14 @@ public class ChessPiece {
 
         /*Any direction one time*/
         ChessPosition[] positions = {
-                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()),    // up
-                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()-1),  // upLeft
-                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()+1),  // upRight
-                new ChessPosition(myPosition.getRow(), myPosition.getColumn()-1),    // middleLeft
-                new ChessPosition(myPosition.getRow(), myPosition.getColumn()+1),    // middleRight
-                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()),    // down
-                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()-1),  // downLeft
-                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()+1)   // downRight
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()),    //up
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()+1),  //up right
+                new ChessPosition(myPosition.getRow(), myPosition.getColumn()+1),    //right
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()+1),  //down right
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()),    //down
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()-1),  //down left
+                new ChessPosition(myPosition.getRow(), myPosition.getColumn()-1),    //left
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()-1)   //up left
         };
         //check positions
         for (ChessPosition newPosition : positions) {
