@@ -51,7 +51,47 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        return new ArrayList<>();
+        Collection<ChessMove> moves = new ArrayList<>();
+
+        if (this.type == PieceType.KING) {
+            moves.addAll(getKingMoves(board, myPosition));
+        }
+
+        return moves;
+    }
+
+    private ArrayList<ChessMove> getKingMoves(ChessBoard board, ChessPosition myPosition) {
+
+        ArrayList<ChessMove> KingMoves = new ArrayList<>();
+
+        /*Any direction one time*/
+        ChessPosition[] positions = {
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()),    // up
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()-1),  // upLeft
+                new ChessPosition(myPosition.getRow()-1, myPosition.getColumn()+1),  // upRight
+                new ChessPosition(myPosition.getRow(), myPosition.getColumn()-1),    // middleLeft
+                new ChessPosition(myPosition.getRow(), myPosition.getColumn()+1),    // middleRight
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()),    // down
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()-1),  // downLeft
+                new ChessPosition(myPosition.getRow()+1, myPosition.getColumn()+1)   // downRight
+        };
+        //check positions
+        for (ChessPosition newPosition : positions) {
+            //ensure the move is within the 1 8 matrix
+            if (newPosition.getRow() >= 1 && newPosition.getRow() <= 8 &&
+                    newPosition.getColumn() >= 1 && newPosition.getColumn() <= 8) {
+
+                ChessPiece pieceOnPosition = board.getPiece(newPosition);
+
+                //take the now validated pieceOnPosition and move if the square is empty or contains enemy piece
+                if (pieceOnPosition == null ||
+                        pieceOnPosition.getTeamColor() != this.getTeamColor()) {
+                    KingMoves.add(new ChessMove(myPosition, newPosition, null));
+                }
+            }
+        }
+
+        return KingMoves;
     }
 
 

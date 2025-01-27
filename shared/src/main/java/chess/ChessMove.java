@@ -7,29 +7,30 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessMove {
-    private ChessPosition startPos;
-    private ChessPosition endPos;
+    private ChessPosition startPosition;
+    private ChessPosition endPosition;
     private ChessPiece.PieceType promoPiece;
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
-        this.startPos = startPosition;
-        this.endPos = endPosition;
+        this.startPosition = startPosition;
+        this.endPosition = endPosition;
         this.promoPiece = promotionPiece;
+
     }
 
     /**
      * @return ChessPosition of starting location
      */
     public ChessPosition getStartPosition() {
-        return startPos;
+        return startPosition;
     }
 
     /**
      * @return ChessPosition of ending location
      */
     public ChessPosition getEndPosition() {
-        return endPos;
+        return endPosition;
     }
 
     /**
@@ -47,8 +48,8 @@ public class ChessMove {
     @Override
     public String toString() {
         return String.format("(%d,%d) -> (%d,%d)%s",
-                startPos.getRow(), startPos.getColumn(),
-                endPos.getRow(), endPos.getColumn(),
+                startPosition.getRow(), startPosition.getColumn(),
+                endPosition.getRow(), endPosition.getColumn(),
                 promoPiece != null ? " promotion: " + promoPiece : "");
     }
 }
