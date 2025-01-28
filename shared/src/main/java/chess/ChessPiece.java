@@ -60,6 +60,18 @@ public class ChessPiece {
         if (this.type == PieceType.ROOK) {
             moves.addAll(getRookMoves(board, myPosition));
         }
+        if (this.type == PieceType.BISHOP) {
+            moves.addAll(getBishopMoves(board, myPosition));
+        }
+        if (this.type == PieceType.QUEEN) {
+            moves.addAll(getQueenMoves(board, myPosition));
+        }
+        if (this.type == PieceType.KNIGHT) {
+            moves.addAll(getKnightMoves(board, myPosition));
+        }
+        if (this.type == PieceType.PAWN) {
+            moves.addAll(getPawnMoves(board, myPosition));
+        }
 
         return moves;
     }
