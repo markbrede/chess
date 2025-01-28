@@ -57,6 +57,9 @@ public class ChessPiece {
         if (this.type == PieceType.KING) {
             moves.addAll(getKingMoves(board, myPosition));
         }
+        if (this.type == PieceType.ROOK) {
+            moves.addAll(getRookMoves(board, myPosition));
+        }
 
         return moves;
     }
@@ -130,16 +133,3 @@ public class ChessPiece {
                 String.valueOf(Character.toLowerCase(pieceChar));
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
