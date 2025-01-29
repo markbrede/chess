@@ -69,9 +69,9 @@ public class ChessPiece {
         if (this.type == PieceType.KNIGHT) {
             moves.addAll(getKnightMoves(board, myPosition));
         }
-        /**if (this.type == PieceType.PAWN) {
+        if (this.type == PieceType.PAWN) {
             moves.addAll(getPawnMoves(board, myPosition));
-        }**/
+        }
 
         return moves;
     }
@@ -318,6 +318,93 @@ public class ChessPiece {
         return knightMoves;
     }
 
+
+
+    /**PAWN**/
+    private ArrayList<ChessMove> getPawnMoves(ChessBoard board, ChessPosition myPosition) {
+        ArrayList<ChessMove> pawnMoves = new ArrayList<>();
+
+        //pawn moves up or down board based on the team color
+        int teamdirection = (pieceColor == ChessGame.TeamColor.WHITE) ? 1 : -1;
+
+        //positions that move forward
+        ChessPosition[] forwardPawn;
+
+        //determine if pawn is in start position
+        //2 for white team pawns and 7 for black team pawns
+        if ((pieceColor == ChessGame.TeamColor.WHITE && myPosition.getRow() == 2) ||
+                (pieceColor == ChessGame.TeamColor.BLACK && myPosition.getRow() == 7)) {
+            //if pawn is in start position, allow it to move 2 squares
+            forwardPawn = new ChessPosition[]{
+                    new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn()),      // One square forward
+                    new ChessPosition(myPosition.getRow() + (2 * teamdirection), myPosition.getColumn()) // Two squares forward
+            };
+        } else {
+            //prevent pawn from moving more than two squares when out of start position
+            forwardPawn = new ChessPosition[]{
+                    new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn())
+            };
+        }
+
+        //diagonally forward are the position a pawn can KO the opposing team pieces.
+        ChessPosition[] KOPositions = {
+                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() - 1), // Capture left
+                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() + 1)  // Capture right
+        };
+
+        //check positions with what I learned about enhanced for loops
+        for (ChessPosition newPosition : forwardPawn) {
+            //ensure the move is within the 1 8 matrix
+            if (newPosition.getRow() >= 1 && newPosition.getRow() <= 8 &&
+                    newPosition.getColumn() >= 1 && newPosition.getColumn() <= 8) {
+
+                ChessPiece pieceOnPosition = board.getPiece(newPosition);
+                //spot needs to be empty for pawn to move forward
+                if (pieceOnPosition == null) {
+                    //if pawn reaches promotion
+                    if (newPosition.getRow() == 1 || newPosition.getRow() == 8) {
+                        promoPawn(pawnMoves, myPosition, newPosition);
+                    } else {
+                        //else normal move forward
+                        pawnMoves.add(new ChessMove(myPosition, newPosition, null));
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+
+        //KO moves
+        for (ChessPosition newPosition : KOPositions) {
+            //ensure the move is within the 1 8 matrix
+            if (newPosition.getRow() >= 1 && newPosition.getRow() <= 8 &&
+                    newPosition.getColumn() >= 1 && newPosition.getColumn() <= 8) {
+
+                ChessPiece pieceOnPosition = board.getPiece(newPosition);
+                //able to knock out opposing team piece if present
+                if (pieceOnPosition != null && pieceOnPosition.getTeamColor() != this.pieceColor) {
+                    //is the knocked out piece a position for a promotion
+                    if (newPosition.getRow() == 1 || newPosition.getRow() == 8) {
+                        // Add all possible promotion moves
+                        promoPawn(pawnMoves, myPosition, newPosition);
+                    } else {
+                        pawnMoves.add(new ChessMove(myPosition, newPosition, null));
+                    }
+                }
+            }
+        }
+
+        return pawnMoves;
+    }
+
+    //array list of all possible promo
+    private void promoPawn(ArrayList<ChessMove> moves, ChessPosition start, ChessPosition end) {
+        //.add all of my previous pieces
+        moves.add(new ChessMove(start, end, PieceType.QUEEN));
+        moves.add(new ChessMove(start, end, PieceType.ROOK));
+        moves.add(new ChessMove(start, end, PieceType.BISHOP));
+        moves.add(new ChessMove(start, end, PieceType.KNIGHT));
+    }
 
 
 
