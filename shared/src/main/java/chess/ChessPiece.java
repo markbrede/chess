@@ -348,8 +348,8 @@ public class ChessPiece {
 
         //diagonally forward are the position a pawn can KO the opposing team pieces.
         ChessPosition[] KOPositions = {
-                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() - 1), // Capture left
-                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() + 1)  // Capture right
+                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() - 1), // knock out left
+                new ChessPosition(myPosition.getRow() + teamdirection, myPosition.getColumn() + 1)  // knocj out right
         };
 
         //check positions with what I learned about enhanced for loops
@@ -398,6 +398,8 @@ public class ChessPiece {
     }
 
     //array list of all possible promo
+    //used when a pawn reaches promo through forward movement
+    //used when a pawn reaches promo through KO
     private void promoPawn(ArrayList<ChessMove> moves, ChessPosition start, ChessPosition end) {
         //.add all of my previous pieces
         moves.add(new ChessMove(start, end, PieceType.QUEEN));
