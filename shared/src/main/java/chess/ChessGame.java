@@ -16,6 +16,7 @@ public class ChessGame {
 
     /**
      * @return Which team's turn it is
+     * implemented in Phase 1
      */
     public TeamColor getTeamTurn() {
         throw new RuntimeException("Not implemented");
