@@ -80,7 +80,6 @@ public class ChessPiece {
 
     /**KING**/
     private ArrayList<ChessMove> getKingMoves(ChessBoard board, ChessPosition myPosition) {
-
         ArrayList<ChessMove> KingMoves = new ArrayList<>();
 
         //Any direction one time

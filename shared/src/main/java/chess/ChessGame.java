@@ -10,8 +10,13 @@ import java.util.Collection;
  */
 public class ChessGame {
 
-    public ChessGame() {
+    private ChessBoard board;
+    private TeamColor teamTurn;
 
+    public ChessGame() {
+        this.board = new ChessBoard();
+        this.board.resetBoard();
+        this.teamTurn = TeamColor.WHITE;
     }
 
     /**
@@ -19,7 +24,7 @@ public class ChessGame {
      * implemented in Phase 1
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return teamTurn;
     }
 
     /**
@@ -28,7 +33,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        teamTurn = team;
     }
 
     /**
@@ -57,7 +62,39 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+        ChessPiece.PieceType promotionPiece = move.getPromotionPiece();
+
+        ChessPiece piece = board.getPiece(startPosition);
+
+        //throw error if no piece is not in start position
+        if (piece == null) {
+            throw new InvalidMoveException("No piece at the start position");
+        }
+
+        //verify teams turn
+        if (piece.getTeamColor() != getTeamTurn()) {
+            throw new InvalidMoveException("It's not your turn");
+        }
+
+        //validate move
+        Collection<ChessMove> validMoves = validMoves(startPosition);
+        if (!validMoves.contains(move)) {
+            throw new InvalidMoveException("Invalid move for this piece");
+        }
+
+        //piece now moves
+        board.addPiece(endPosition, piece);
+        board.addPiece(startPosition, null);
+
+        //pawn promo
+        if (promotionPiece != null) {
+            board.addPiece(endPosition, new ChessPiece(piece.getTeamColor(), promotionPiece));
+        }
+
+        //next team turn
+        setTeamTurn(getTeamTurn() == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE);
     }
 
     /**
