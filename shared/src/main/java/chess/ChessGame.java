@@ -25,6 +25,7 @@ public class ChessGame {
     /**
      * @return Which team's turn it is
      */
+    //get correct team colors turn
     public TeamColor getTeamTurn() {
         return correctColorsTurn;
     }
@@ -34,6 +35,7 @@ public class ChessGame {
      *
      * @param team the team whose turn it is
      */
+    //set correct team colors turn
     public void setTeamTurn(TeamColor team) {
         this.correctColorsTurn = team;
     }
@@ -56,6 +58,26 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         throw new RuntimeException("Not implemented");
     }
+
+
+    //CREATES COPY OF THE BOARD
+    /**I am going to have this code create a copy of the board so that valid moves can be verified without changing
+    the actual board in the game**/
+    private ChessBoard copyOfCurrentBoard() {
+        ChessBoard copiedBoard = new ChessBoard();
+        for (int row = 0; row <= 7; row++) {
+            for (int col = 0; col <= 7; col++) {
+                ChessPosition pieceLocation = new ChessPosition(row, col);
+                ChessPiece thePiece = board.getPiece(pieceLocation);
+                if (thePiece != null) {
+                    copiedBoard.addPiece(pieceLocation, new ChessPiece(thePiece.getTeamColor(), thePiece.getPieceType()));
+                }
+            }
+        }
+        return copiedBoard;
+    }
+
+
 
     /**
      * Makes a move in a chess game
@@ -103,6 +125,8 @@ public class ChessGame {
      *
      * @param board the new board to use
      */
+
+    //set board
     public void setBoard(ChessBoard board) {
         this.board = board;
     }
@@ -112,6 +136,7 @@ public class ChessGame {
      *
      * @return the chessboard
      */
+    //get board
     public ChessBoard getBoard() {
         return board;
     }
