@@ -1,5 +1,6 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -10,8 +11,15 @@ import java.util.Collection;
  */
 public class ChessGame {
 
-    public ChessGame() {
+    private ChessBoard board;
+    private ChessGame.TeamColor correctColorsTurn;
 
+
+    //loading up the constructor and linking them to the above fields
+    public ChessGame() {
+        this.board = new ChessBoard();
+        this.board.resetBoard();
+        this.correctColorsTurn = ChessGame.TeamColor.WHITE;
     }
 
     /**
