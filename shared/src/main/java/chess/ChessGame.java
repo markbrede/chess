@@ -48,6 +48,11 @@ public class ChessGame {
         BLACK
     }
 
+
+
+
+
+
     /**
      * Gets a valid moves for a piece at the given location
      *
@@ -75,61 +80,13 @@ public class ChessGame {
 
             //it would be great if my kingChecked method work but ofc it has been 2 hours and it does not
             //in theory, if not in check, then .add it to valid moves
-            if (!kingChecked(piece.getTeamColor(), tempBoard)) {
+            if (!isInCheck(piece.getTeamColor(), tempBoard)) {
                 validMoves.add(move);
             }
         }
         return validMoves; // Return all valid moves
     }
 
-
-// FINALLY! I am an idiot and assumed I understood what qualifies as "check".
-//Admittedly, I caved and asked GTP what I was doing wrong. Because of the assistance, I have thoroughly
-//studied the fix, typed the code out by myself, and have added detailed notes to demonstrate my understanding.
-//if this raises concern, I would be very happy to discuss the why of the code in person or code an alternative method if necessary.
-
-//is the teams king in check? I will make a data structure that will give the boolean answer.
-    private boolean kingChecked(ChessGame.TeamColor teamColor, ChessBoard tempBoard) {
-        ChessPosition kingPos = null;
-
-        //in the 8 x 8 matrix, loop through getting the positions info and the piece
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition posInfo = new ChessPosition(row, col);
-                ChessPiece piece = tempBoard.getPiece(posInfo);
-                //if there is a piece there, get the team color and check if it is king
-                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
-                    kingPos = posInfo; //kings position is the posInfo which is now set to kingPos
-                    break;
-                }
-            }
-        }
-
-        //for test that tests for a board without a king, return false.
-        if (kingPos == null) return false;
-
-        //in the 8 x 8 matrix, loop through getting the positions info and the piece
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition posInfoOppT = new ChessPosition(row, col);
-                ChessPiece piece = tempBoard.getPiece(posInfoOppT);
-
-                //if there is a piece and the piece is not your teams color... moves = possible for more that piece
-                if (piece != null && piece.getTeamColor() != teamColor) {
-                    Collection<ChessMove> moves = piece.pieceMoves(tempBoard, posInfoOppT);
-
-                    //now, using what I got from kingPos and moves, return true if the end position will take out the king
-                    //AKA is the king in check. Otherwise the method will return false.
-                    for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(kingPos)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
 
 
 
@@ -202,8 +159,60 @@ public class ChessGame {
      * @param teamColor which team to check for check
      * @return True if the specified team is in check
      */
-    public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+
+    //method overloading for isInCheck in order to have a private version that does the actual work
+    //this is because I need have made validMoves should not be modifying the actual board to determine validity
+    public boolean isInCheck(ChessGame.TeamColor teamColor) {
+        return isInCheck(teamColor, board);
+    }
+
+    // FINALLY! I am an idiot and assumed I understood what qualifies as "check".
+//Admittedly, I caved and asked GTP what I was doing wrong. Because of the assistance, I have thoroughly
+//studied the fix, typed the code out by myself, and have added detailed notes to demonstrate my understanding.
+//if this raises concern, I would be very happy to discuss the why of the code in person or code an alternative method if necessary.
+
+
+    //is the teams king in check? I will make a data structure that will give the boolean answer.
+    private boolean isInCheck(ChessGame.TeamColor teamColor, ChessBoard tempBoard) {
+        ChessPosition kingPos = null;
+
+        //in the 8 x 8 matrix, loop through getting the positions info and the piece
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition posInfo = new ChessPosition(row, col);
+                ChessPiece piece = tempBoard.getPiece(posInfo);
+                //if there is a piece there, get the team color and check if it is king
+                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    kingPos = posInfo; //kings position is the posInfo which is now set to kingPos
+                    break;
+                }
+            }
+        }
+
+        //for test that tests for a board without a king, return false.
+        if (kingPos == null) return false;
+
+        //in the 8 x 8 matrix, loop through getting the positions info and the piece
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition posInfoOppT = new ChessPosition(row, col);
+                ChessPiece piece = tempBoard.getPiece(posInfoOppT);
+
+                //if there is a piece and the piece is not your teams color... moves = possible for more that piece
+                if (piece != null && piece.getTeamColor() != teamColor) {
+                    Collection<ChessMove> moves = piece.pieceMoves(tempBoard, posInfoOppT);
+
+                    //now, using what I got from kingPos and moves, return true if the end position will take out the king
+                    //AKA is the king in check. Otherwise the method will return false.
+                    for (ChessMove move : moves) {
+                        if (move.getEndPosition().equals(kingPos)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -212,9 +221,27 @@ public class ChessGame {
      * @param teamColor which team to check for checkmate
      * @return True if the specified team is in checkmate
      */
-    public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+    public boolean isInCheckmate(ChessGame.TeamColor teamColor) {
+        if (!isInCheck(teamColor)) return false; //you can be in checkmate without being in check
+
+
+        //recycling the nested for loop way of iterating as seen in the private isInCheck
+        //instead of looking for the king, we are looking for valid moves
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition posInfo = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(posInfo);
+                if (piece != null && piece.getTeamColor() == teamColor) {
+                    if (!validMoves(posInfo).isEmpty()) {
+                        return false;//if not a valid move return false
+                    }
+                }
+            }
+        }
+        return true;
     }
+
+
 
     /**
      * Determines if the given team is in stalemate, which here is defined as having
