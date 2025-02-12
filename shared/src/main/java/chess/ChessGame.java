@@ -250,8 +250,25 @@ public class ChessGame {
      * @param teamColor which team to check for stalemate
      * @return True if the specified team is in stalemate, otherwise false
      */
+
+    //stalemate occurs when the player whose turn it is to move has no validMoves available and their king is not in check.
+    //cause of this isInStalemate will return false if the king is in check.
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if (isInCheck(teamColor)) return false;
+
+        //stalemate will be true if the specific TeamColor has no valid moves for validMoves
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition posInfo = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(posInfo);
+                if (piece != null && piece.getTeamColor() == teamColor) {
+                    if (!validMoves(posInfo).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /**
