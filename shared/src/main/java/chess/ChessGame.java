@@ -87,6 +87,7 @@ public class ChessGame {
 //Admittedly, I caved and asked GTP what I was doing wrong. Because of the assistance, I have thoroughly
 //studied the fix, typed the code out by myself, and have added detailed notes to demonstrate my understanding.
 //if this raises concern, I would be very happy to discuss the why of the code in person or code an alternative method if necessary.
+
 //is the teams king in check? I will make a data structure that will give the boolean answer.
     private boolean kingChecked(ChessGame.TeamColor teamColor, ChessBoard tempBoard) {
         ChessPosition kingPos = null;
@@ -161,8 +162,37 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        //piece is the piece at the start position
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+
+        //if there is no piece at the start position or it's not the current teams turn, throw an exception
+        if (piece == null || piece.getTeamColor() != correctColorsTurn) {
+            throw new InvalidMoveException();
+        }
+
+        //using validMoves, this will get the okay moves for the piece at the start position
+        Collection<ChessMove> validMoves = validMoves(move.getStartPosition());
+
+        //if there are no valid moves o r the given move is not in the list, throw the invalid moves exception
+        if (validMoves == null || !validMoves.contains(move)) {
+            throw new InvalidMoveException();
+        }
+
+        //resuing the code from validMove to move the piece to the new position
+        //this time with board instead of the temp board
+        board.addPiece(move.getEndPosition(), piece);
+        board.addPiece(move.getStartPosition(), null);
+
+        //using my getPromoPiece from ChessMove
+        //if the move is a promotion, replace the piece at the end position with the promoted piece
+        if (move.getPromotionPiece() != null) {
+            board.addPiece(move.getEndPosition(), new ChessPiece(correctColorsTurn, move.getPromotionPiece()));
+        }
+
+        //other players turn
+        correctColorsTurn = (correctColorsTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
+
 
 
 
