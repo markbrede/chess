@@ -92,7 +92,7 @@ public class ChessGame {
 
 
 
-    //CREATES COPY OF THE BOARD
+    //CREATES COPY OF THE BOARD. I will probably just merge this into valid moves
     //iterate with for loop
     /**I am going to have this code create a copy of the board so that valid moves can be verified without changing
     the actual board in the game**/
