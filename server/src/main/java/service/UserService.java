@@ -2,7 +2,7 @@ package service;
 
 import dataaccess.DataAccessException;
 import dataaccess.MemoryUserDAO;
-import model.UserDataRecord;
+import model.UserData;
 import java.util.UUID;
 
 public class UserService {
@@ -16,7 +16,7 @@ public class UserService {
         if (username == null || username.isEmpty() || password == null || password.isEmpty() || email == null || email.isEmpty()) {
             throw new IllegalArgumentException("Error: bad request");
         }
-        UserDataRecord newUser = new UserDataRecord(username, password, email);
+        UserData newUser = new UserData(username, password, email);
         userDAO.createUser(newUser);
         return generateAuthToken();
     }
