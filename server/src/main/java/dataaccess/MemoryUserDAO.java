@@ -5,11 +5,14 @@ import model.UserData;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MemoryUserDAO {
+/**unfortunately, I did not see the importance of using an interface until after I finished the register endpoint.
+restructuring DAO so that is it can work with different implementations**/
+public class MemoryUserDAO implements UserDAO {
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthData> auths = new HashMap<>();
 
     //creates a new user
+    @Override
     public void createUser(UserData user) throws DataAccessException {
         //if a new user contains existing UserData (username) in hashmap, throw error message
         if (users.containsKey(user.username())) {
@@ -20,6 +23,7 @@ public class MemoryUserDAO {
     }
 
     //get the user by their username
+    @Override
     public UserData getUser(String username) throws DataAccessException {
         //look for user from hashmap using their username
         UserData user = users.get(username);
@@ -32,6 +36,7 @@ public class MemoryUserDAO {
     }
 
     //makes users new authentication token
+    @Override
     public void createAuth(String username, String authToken) throws DataAccessException {
         //dose user exists in the hashmap?
         if (!users.containsKey(username)) {
@@ -47,6 +52,7 @@ public class MemoryUserDAO {
     }
 
     //gets authentication data through auth token
+    @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
         //see if authentication data from the auths hashmap can be accessed using the auth token
         AuthData auth = auths.get(authToken);
@@ -59,6 +65,7 @@ public class MemoryUserDAO {
     }
 
     //for deleting authentication tokens
+    @Override
     public void deleteAuth(String authToken) throws DataAccessException {
         //does the authentication token exists in the auths hashmap?
         if (!auths.containsKey(authToken)) {
@@ -69,6 +76,7 @@ public class MemoryUserDAO {
     }
 
     //clear data
+    @Override
     public void clear() {
         users.clear();
         auths.clear();
