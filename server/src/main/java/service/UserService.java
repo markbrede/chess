@@ -1,38 +1,45 @@
 package service;
 
-import dataaccess.MemoryUserDAO;
-import model.AuthData;
+import dataaccess.*;
 import model.UserData;
 
-import java.util.UUID;
-
 public class UserService {
+    //I want these fields private
+    private final UserDAO userDAO;
+    private final AuthDAO authDAO;
 
-    private final MemoryUserDAO userDAO;
-
-    public UserService(MemoryUserDAO userDAO) {
+    public UserService(UserDAO userDAO, AuthDAO authDAO) {
         this.userDAO = userDAO;
+        this.authDAO = authDAO;
     }
 
-    public RegisterResult register(RegisterRequest request) throws Exception {
-        try {
-            // Check if the username already exists
-            if (userDAO.getUser(request.getUsername()) != null) {
-                throw new Exception("Username already taken");
-            }
-
-            // Create a new user
-            UserData userData = new UserData(request.getUsername(), request.getPassword(), request.getEmail());
-            userDAO.createUser(userData);
-
-            // Generate an authentication token
-            String authToken = UUID.randomUUID().toString();
-            userDAO.createAuth(request.getUsername(), authToken);
-
-            // Return the result with the username and auth token
-            return new RegisterResult(request.getUsername(), authToken);
-        } catch (DataAccessException e) {
-            throw new Exception(e.getMessage());
+    //new users are made with a username, password, and email
+    public String registerUser(String username, String password, String email) throws DataAccessException {
+        if (username == null || username.isEmpty() ||
+                password == null || password.isEmpty() ||
+                email == null || email.isEmpty()) {
+            throw new DataAccessException("Username, password, and email cannot be empty.");
         }
+
+        UserData newUser = new UserData(username, password, email);
+        userDAO.createUser(newUser);
+
+        return authDAO.makeAuth(username); //make a token when a user registers
+    }
+
+    //authenticates past users and returns auth token
+    public String authenticateUser(String username, String password) throws DataAccessException {
+        UserData user = userDAO.getUser(username);
+
+        if (!user.password().equals(password)) {
+            throw new DataAccessException("Invalid username or password.");
+        }
+
+        return authDAO.makeAuth(username); //new session, new token
+    }
+
+    //delete the auth token when logged out
+    public void logoutUser(String authToken) throws DataAccessException {
+        authDAO.deleteAuth(authToken);
     }
 }
