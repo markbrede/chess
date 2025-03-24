@@ -1,10 +1,11 @@
 package service;
 
 import dataaccess.*;
+import model.AuthData;
 import model.UserData;
 
 public class UserService {
-    //I want these fields private
+
     private final UserDAO userDAO;
     private final AuthDAO authDAO;
 
@@ -12,34 +13,28 @@ public class UserService {
         this.userDAO = userDAO;
         this.authDAO = authDAO;
     }
-
-    //new users are made with a username, password, and email
-    public String registerUser(String username, String password, String email) throws DataAccessException {
-        if (username == null || username.isEmpty() ||
-                password == null || password.isEmpty() ||
-                email == null || email.isEmpty()) {
-            throw new DataAccessException("Username, password, and email cannot be empty.");
-        }
-
-        UserData newUser = new UserData(username, password, email);
-        userDAO.createUser(newUser);
-
-        return authDAO.makeAuth(username); //make a token when a user registers
+    //named method makeUser so there is no confusion with the lower level method
+    public AuthData makeUser(UserData userData) throws DataAccessException {
+        userDAO.createUser(userData);
+        String authToken = authDAO.makeAuth(userData.username()); //makeAuth generates token
+        return new AuthData(authToken, userData.username());
     }
 
-    //authenticates past users and returns auth token
-    public String authenticateUser(String username, String password) throws DataAccessException {
-        UserData user = userDAO.getUser(username);
-
-        if (!user.password().equals(password)) {
-            throw new DataAccessException("Invalid username or password.");
+    public AuthData loginUser(UserData userData) throws DataAccessException {
+        if (userDAO.verifyUser(userData.username(), userData.password())) {
+            String authToken = authDAO.makeAuth(userData.username());
+            return new AuthData(authToken, userData.username());
+        } else {
+            throw new DataAccessException("The username and/or password you entered are incorrect");
         }
-
-        return authDAO.makeAuth(username); //new session, new token
     }
 
-    //delete the auth token when logged out
     public void logoutUser(String authToken) throws DataAccessException {
         authDAO.deleteAuth(authToken);
+    }
+
+    public void clear() {
+        userDAO.clear();
+        authDAO.clear();
     }
 }

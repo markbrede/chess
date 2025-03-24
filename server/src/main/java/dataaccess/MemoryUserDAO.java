@@ -8,7 +8,7 @@ public class MemoryUserDAO implements UserDAO {
 
     public void createUser(UserData user) throws DataAccessException {
         if (users.containsKey(user.username())) {
-            throw new DataAccessException("User already exists");
+            throw new DataAccessException("That user already exists");
         }
         users.put(user.username(), user);
     }
