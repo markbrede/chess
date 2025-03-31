@@ -1,5 +1,7 @@
 package service;
-
+// Service are the workers of your application. They contain the business logic.
+// We talked about how your UserService handles the actual registration process, checking if the username is taken,
+// creating a new user in the database, and generating an authentication token.
 import dataaccess.*;
 import model.AuthData;
 import model.UserData;
