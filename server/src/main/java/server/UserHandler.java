@@ -11,12 +11,14 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import java.util.Map;
+import dataaccess.BadRequestException;
+import dataaccess.UnauthorizedException;
 
 public class UserHandler {
 
     private final UserService userService;
 
-    // Constructor takes a UserService instance
+    //UserService instance
     public UserHandler(UserService userService) {
         this.userService = userService;
     }
@@ -24,35 +26,35 @@ public class UserHandler {
     public Object register(Request req, Response res) {
         Gson gson = new Gson();
         try {
-            // Parse the request body into a UserData object
+            // Parse and validate input
             UserData userData = gson.fromJson(req.body(), UserData.class);
-
-            // Validate user input
             if (userData.username() == null || userData.password() == null || userData.email() == null ||
                     userData.username().isEmpty() || userData.password().isEmpty() || userData.email().isEmpty()) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
+                throw new BadRequestException("Error: bad request"); // throws here
             }
 
-            // Call UserService to create a new user
+            //create user and return response
             AuthData authData = userService.makeUser(userData);
             res.status(200);
-            // Return success response with username and authToken
             return gson.toJson(Map.of("username", authData.username(), "authToken", authData.authToken()));
-        } catch (DataAccessException e) {
-            // Handle case where user already exists
-            if (e.getMessage().equals("That user already exists")) {
-                res.status(403);
-                return gson.toJson(Map.of("message", "Error: already taken"));
-            } else {
-                // Handle other data access errors
-                res.status(500);
-                return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+
+        } catch (BadRequestException e) {
+            //empty fields or duplicate users (from DAO)
+            res.status(400); //missing fields
+            if (e.getMessage().equals("Error: username already exists")) {
+                res.status(403); //when duplicate happens
             }
-        } catch (Exception e) {
-            // Handle any other unexpected errors
+            return gson.toJson(Map.of("message", e.getMessage()));
+
+        } catch (UnauthorizedException e) {
+            //not used here. included for completeness
+            res.status(401);
+            return gson.toJson(Map.of("message", e.getMessage()));
+
+        } catch (DataAccessException e) {
+            //in case of unexpected errors
             res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            return gson.toJson(Map.of("message", "Error: server error"));
         }
     }
 }

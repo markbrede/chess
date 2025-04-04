@@ -12,7 +12,7 @@ public class MemoryAuthDAO implements AuthDAO {
     @Override
     public String makeAuth(String username) throws DataAccessException {
         if (username == null || username.isEmpty()) {
-            throw new DataAccessException("Your username cannot be empty");
+            throw new DataAccessException("Error: username cannot be empty");
         }
         String authToken = UUID.randomUUID().toString(); //ex from the class md for getting a unique token
         AuthData auth = new AuthData(authToken, username);
@@ -24,7 +24,7 @@ public class MemoryAuthDAO implements AuthDAO {
     public AuthData getAuth(String authToken) throws DataAccessException {
         AuthData auth = authTokens.get(authToken);
         if (auth == null) {
-            throw new DataAccessException("The authorize token was not found: " + authToken);
+            throw new UnauthorizedException("Error: auth token not found: " + authToken);
         }
         return auth;
     }
@@ -33,7 +33,7 @@ public class MemoryAuthDAO implements AuthDAO {
     public void deleteAuth(String authToken) throws DataAccessException {
         //modifies map. including in if statement
         if (authTokens.remove(authToken) == null) {
-            throw new DataAccessException("The authorize token was not found and could not be deleted: " + authToken);
+            throw new DataAccessException("Error: auth token was not found and could not be deleted: " + authToken);
         }
     }
 

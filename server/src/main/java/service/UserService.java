@@ -23,12 +23,20 @@ public class UserService {
     }
 
     public AuthData loginUser(UserData userData) throws DataAccessException {
-        if (userDAO.verifyUser(userData.username(), userData.password())) {
+        //switching method to use the service's verifyUser method instead of DAO
+        if (verifyUser(userData.username(), userData.password())) {
             String authToken = authDAO.makeAuth(userData.username());
             return new AuthData(authToken, userData.username());
         } else {
-            throw new DataAccessException("The username and/or password you entered are incorrect");
+            throw new UnauthorizedException("Error: invalid username or password");
         }
+    }
+
+    //verifyUser cause authUser looks wrong in the userDAO interface
+    public boolean verifyUser(String username, String password) throws DataAccessException {
+        //call userDAO.getUser since I moved this method from MemoryUserDAO to UserService
+        UserData user = userDAO.getUser(username);
+        return user.password().equals(password);
     }
 
     public void logoutUser(String authToken) throws DataAccessException {

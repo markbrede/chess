@@ -12,9 +12,9 @@ import java.util.Objects;
 
 
 public class ChessBoard {
-    private ChessPiece[][] squares = new ChessPiece[8][8]; //Added field matrix for chess board
+    private ChessPiece squares[][]; //Added field matrix for chess board
     public ChessBoard() {
-        
+        squares = new ChessPiece[8][8];
     }
 
     /**
