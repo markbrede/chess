@@ -64,14 +64,19 @@ public class UserHandler {
         try {
             //parse and validate input. Not for emails tho
             UserData userData = gson.fromJson(req.body(), UserData.class);
+            //if the username or password are missing,
             if (userData.username() == null || userData.password() == null ||
+                    //OR if the username or pass is just an empty string,
                     userData.username().isEmpty() || userData.password().isEmpty()) {
+                //then throw bad request error cause of the bad login creds
                 throw new BadRequestException("Error: bad request");
             }
 
-            //authenticate user through user service
+            //if they have good creds, call userservice to attempt login
             AuthData authData = userService.loginUser(userData);
+            //stat two hundy if successful
             res.status(200);
+            //json response with username and password
             return gson.toJson(Map.of("username", authData.username(), "authToken", authData.authToken()));
 
         } catch (BadRequestException e) {
@@ -83,6 +88,29 @@ public class UserHandler {
         } catch (DataAccessException e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: server error"));
+        }
+    }
+
+    //logout. clears session tokens.
+    public Object logout(Request req, Response res) {
+        Gson gson = new Gson();
+        try {
+            String authToken = req.headers("Authorization");
+            if (authToken == null || authToken.isEmpty()) {
+                throw new UnauthorizedException("Error: unauthorized"); // Already correct
+            }
+
+            userService.logoutUser(authToken);
+            res.status(200);
+            return "{}";
+            
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return gson.toJson(Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            //specific handling for invalid tokens
+            res.status(401);
+            return gson.toJson(Map.of("message", "Error: unauthorized"));
         }
     }
 }
