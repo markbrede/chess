@@ -57,4 +57,32 @@ public class UserHandler {
             return gson.toJson(Map.of("message", "Error: server error"));
         }
     }
+
+    //login. easy money
+    public Object login(Request req, Response res) {
+        Gson gson = new Gson();
+        try {
+            //parse and validate input. Not for emails tho
+            UserData userData = gson.fromJson(req.body(), UserData.class);
+            if (userData.username() == null || userData.password() == null ||
+                    userData.username().isEmpty() || userData.password().isEmpty()) {
+                throw new BadRequestException("Error: bad request");
+            }
+
+            //authenticate user through user service
+            AuthData authData = userService.loginUser(userData);
+            res.status(200);
+            return gson.toJson(Map.of("username", authData.username(), "authToken", authData.authToken()));
+
+        } catch (BadRequestException e) {
+            res.status(400);
+            return gson.toJson(Map.of("message", e.getMessage()));
+        } catch (UnauthorizedException e) {
+            res.status(401);
+            return gson.toJson(Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            res.status(500);
+            return gson.toJson(Map.of("message", "Error: server error"));
+        }
+    }
 }

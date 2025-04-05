@@ -33,6 +33,7 @@ public class Server {
 
 
         Spark.post("/user", userHandler::register); //user routes to register
+        Spark.post("/session", userHandler::login); //My potentially buggy login
         Spark.delete("/db", this::clear); //db route to clear method
 
         // Exception handlers (commented out for now):
