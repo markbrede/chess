@@ -103,7 +103,7 @@ public class UserHandler {
             userService.logoutUser(authToken);
             res.status(200);
             return "{}";
-            
+
         } catch (UnauthorizedException e) {
             res.status(401);
             return gson.toJson(Map.of("message", e.getMessage()));
