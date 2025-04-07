@@ -3,47 +3,62 @@ package server;
 //It's like the front door of my chess application.
 import com.google.gson.Gson;
 import dataaccess.*;
+import service.GameService;
 import service.UserService;
 import spark.*;
+import java.util.Map;
 
 public class Server {
 
     private UserDAO userDAO;
     private AuthDAO authDAO;
+    private GameDAO gameDAO;
 
     private UserService userService;
+    private GameService gameService;
 
     private UserHandler userHandler; //users http requests.
+    private GameHandler gameHandler;
 
     public Server() {
         userDAO = new MemoryUserDAO();
         authDAO = new MemoryAuthDAO();
+        gameDAO = new MemoryGameDAO();
 
-        //UserService instance with DAOs as dependencies
+        //user service... dao dependencies
         userService = new UserService(userDAO, authDAO); //connects service to dataaccess
+        gameService = new GameService(gameDAO, authDAO);
 
-        //UserHandler instance with UserService as dependency
+        //user handler... user service dependencies
         userHandler = new UserHandler(userService); //connect handler(http request processing) to service
+        gameHandler = new GameHandler(gameService);
     }
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
-
         Spark.staticFiles.location("web");//where the HTML, CSS, JS will be served by the server
 
 
         Spark.post("/user", userHandler::register); //user routes to register
         Spark.post("/session", userHandler::login); //login (potentially buggy)
         Spark.delete("/session", userHandler::logout); //logout
+        Spark.get("/game", gameHandler::listGames);
+        Spark.post("/game", gameHandler::createGame);
+        Spark.put("/game", gameHandler::joinGame);
         Spark.delete("/db", this::clear); //db route to clear method
 
-        // Exception handlers (commented out for now):
-        //these would catch specific exceptions globally and return appropriate responses when I create them in dataaccess
-        //Spark.exception(DataAccessException.class, this::dataAccessExceptionHandler);
-        //Spark.exception(Exception.class, this::genericExceptionHandler);
+        Spark.exception(UnauthorizedException.class, (e, req, res) -> {
+            res.status(401);
+            res.body(new Gson().toJson(Map.of("message", e.getMessage())));
+        });
+
+        Spark.exception(BadRequestException.class, (e, req, res) -> {
+            res.status(400);
+            res.body(new Gson().toJson(Map.of("message", e.getMessage())));
+        });
+
 
         Spark.awaitInitialization();
-
         return Spark.port();
     }
 
@@ -53,12 +68,11 @@ public class Server {
         Spark.awaitStop();
     }
 
+    //updating my clear method to also clear game data
     private Object clear(Request req, Response res) {
-        //call clear on UserService to remove userdata data from database.
         userService.clear();
-
-        res.status(200); //OK status code
-
-        return "{}"; //empt json object
+        gameService.clear(); //mem dao cant throw exception here. Adjusting this soon
+        res.status(200);
+        return "{}";
     }
 }

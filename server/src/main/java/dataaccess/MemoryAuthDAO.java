@@ -31,9 +31,8 @@ public class MemoryAuthDAO implements AuthDAO {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-        //modifies map. including in if statement
         if (authTokens.remove(authToken) == null) {
-            throw new DataAccessException("Error: auth token was not found and could not be deleted: " + authToken);
+            throw new UnauthorizedException("Error: auth token not found"); //adjusted to correct exception type
         }
     }
 

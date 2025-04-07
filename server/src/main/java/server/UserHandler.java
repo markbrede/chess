@@ -1,7 +1,9 @@
 package server;
+
 // Mark, as you finish up the register endpoint, think of the server like a receptionists.
 // They receive requests from the server, figure out what the client wants to do (register a user),
 // and delegate the task to the appropriate service. UserService in your case.
+
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.AuthData;
@@ -9,7 +11,6 @@ import model.UserData;
 import service.UserService;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 import java.util.Map;
 import dataaccess.BadRequestException;
 import dataaccess.UnauthorizedException;
@@ -17,6 +18,7 @@ import dataaccess.UnauthorizedException;
 public class UserHandler {
 
     private final UserService userService;
+    private final Gson gson = new Gson(); //class level gson to fix standard api test error
 
     //UserService instance
     public UserHandler(UserService userService) {
@@ -24,7 +26,6 @@ public class UserHandler {
     }
 
     public Object register(Request req, Response res) {
-        Gson gson = new Gson();
         try {
             // Parse and validate input
             UserData userData = gson.fromJson(req.body(), UserData.class);
@@ -60,7 +61,6 @@ public class UserHandler {
 
     //login. easy money
     public Object login(Request req, Response res) {
-        Gson gson = new Gson();
         try {
             //parse and validate input. Not for emails tho
             UserData userData = gson.fromJson(req.body(), UserData.class);
@@ -93,24 +93,33 @@ public class UserHandler {
 
     //logout. clears session tokens.
     public Object logout(Request req, Response res) {
-        Gson gson = new Gson();
         try {
             String authToken = req.headers("Authorization");
+
+            //valid auth toke that isn't empty
             if (authToken == null || authToken.isEmpty()) {
-                throw new UnauthorizedException("Error: unauthorized"); // Already correct
+                throw new UnauthorizedException("Error: unauthorized");
             }
 
+            //userservice method to logout
             userService.logoutUser(authToken);
+
             res.status(200);
-            return "{}";
+
+            return "{}"; //empty json object if it goes as planned
 
         } catch (UnauthorizedException e) {
+
             res.status(401);
+
             return gson.toJson(Map.of("message", e.getMessage()));
+
         } catch (DataAccessException e) {
-            //specific handling for invalid tokens
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
+
+            res.status(500);
+
+            return gson.toJson(Map.of("message", "Error: server error"));
+
         }
     }
 }
