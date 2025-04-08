@@ -125,32 +125,38 @@ public class ChessGame {
     public boolean isInCheck(ChessGame.TeamColor teamColor) {
         return isInCheck(teamColor, board);
     }
-
     // Determine if opposing teams KING is in check.
     private boolean isInCheck(ChessGame.TeamColor teamColor, ChessBoard tempBoard) {
-        ChessPosition kingPos = null;
-        // Get position information
+        ChessPosition kingPos = getKing(teamColor, tempBoard);
+        if (kingPos == null) {
+            return false;
+        }
+        return inDanger(kingPos, teamColor, tempBoard);
+    }
+    //HELPER
+    private ChessPosition getKing(TeamColor teamColor, ChessBoard tempBoard) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
-                ChessPosition posInfo = new ChessPosition(row, col);
-                ChessPiece piece = tempBoard.getPiece(posInfo);
-                // Check if piece is KING (FIXED BRACES HERE)
-                if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
-                    kingPos = posInfo;
-                    break;
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = tempBoard.getPiece(pos);
+                if (piece != null && piece.getTeamColor() == teamColor &&
+                        piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return pos;
                 }
             }
         }
-        if (kingPos == null) return false;
+        return null;
+    }
+    //HELPER
+    private boolean inDanger(ChessPosition position, TeamColor teamColor, ChessBoard tempBoard) {
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
-                ChessPosition posInfoOppT = new ChessPosition(row, col);
-                ChessPiece piece = tempBoard.getPiece(posInfoOppT);
-
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = tempBoard.getPiece(pos);
                 if (piece != null && piece.getTeamColor() != teamColor) {
-                    Collection<ChessMove> moves = piece.pieceMoves(tempBoard, posInfoOppT);
+                    Collection<ChessMove> moves = piece.pieceMoves(tempBoard, pos);
                     for (ChessMove move : moves) {
-                        if (move.getEndPosition().equals(kingPos)) {
+                        if (move.getEndPosition().equals(position)) {
                             return true;
                         }
                     }
@@ -160,8 +166,7 @@ public class ChessGame {
         return false;
     }
 
-    //HELPER METHOD. (isInCheck, isInStalemate) BOARD OPERATIONS
-    @FunctionalInterface
+    //HELPER (isInCheck, isInStalemate) BOARD OPERATIONS
     private interface BoardPositionConsumer {
         void accept(int row, int col);
     }
@@ -199,7 +204,6 @@ public class ChessGame {
     public boolean isInCheckmate(ChessGame.TeamColor teamColor) {
         return isInCheck(teamColor) && !anyValidMoves(teamColor);
     }
-
     /**
      * Determines if the given team is in stalemate, which here is defined as having
      * no valid moves
@@ -210,7 +214,6 @@ public class ChessGame {
     public boolean isInStalemate(TeamColor teamColor) {
         return !isInCheck(teamColor) && !anyValidMoves(teamColor);
     }
-
     /**
      * Sets this game's chessboard with a given board
      *
@@ -219,7 +222,6 @@ public class ChessGame {
     public void setBoard(ChessBoard board) {
         this.board = board;
     }
-
     /**
      * Gets the current chessboard
      *
