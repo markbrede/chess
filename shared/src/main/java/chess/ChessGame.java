@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
 /**
  * For a class that can manage a chess game, making moves on a board
  * <p>
@@ -18,22 +19,23 @@ public class ChessGame {
         this.board.resetBoard();
         this.correctColorsTurn = ChessGame.TeamColor.WHITE;
     }
+
     /**
      * @return Which team's turn it is
      */
-    // Determines correct teams turn
     public TeamColor getTeamTurn() {
         return correctColorsTurn;
     }
+
     /**
      * Set's which teams turn it is
      *
      * @param team the team whose turn it is
      */
-    // Set turn for correct team.
     public void setTeamTurn(TeamColor team) {
         this.correctColorsTurn = team;
     }
+
     /**
      * Enum identifying the 2 possible teams in a chess game
      */
@@ -41,6 +43,7 @@ public class ChessGame {
         WHITE,
         BLACK
     }
+
     /**
      * Gets a valid moves for a piece at the given location
      *
@@ -50,23 +53,30 @@ public class ChessGame {
      */
     // VALID MOVES METHOD
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        //piece is going to be the startPosition
         ChessPiece piece = board.getPiece(startPosition);
-        if (piece == null) return null;
+        if (piece == null){
+            return null;
+        }
 
         Collection<ChessMove> movePossibilities = piece.pieceMoves(board, startPosition);
         Collection<ChessMove> validMoves = new ArrayList<>();
 
         for (ChessMove move : movePossibilities) {
-            ChessBoard tempBoard = copyOfCurrentBoard();
-            tempBoard.addPiece(move.getEndPosition(), piece); // Move the piece to the new spot.
-            tempBoard.addPiece(startPosition, null);
-            if (!isInCheck(piece.getTeamColor(), tempBoard)) {
+            if (isValidMove(move, piece)) {
                 validMoves.add(move);
             }
         }
-        return validMoves; // Return all valid moves
+        return validMoves;
     }
+
+    //HELPER METHOD. Validate individual moves.
+    private boolean isValidMove(ChessMove move, ChessPiece piece) {
+        ChessBoard tempBoard = copyOfCurrentBoard();
+        tempBoard.addPiece(move.getEndPosition(), piece);
+        tempBoard.addPiece(move.getStartPosition(), null);
+        return !isInCheck(piece.getTeamColor(), tempBoard);
+    }
+
     //COPY OF BOARD.
     private ChessBoard copyOfCurrentBoard() {
         ChessBoard copiedBoard = new ChessBoard();
@@ -104,8 +114,7 @@ public class ChessGame {
         if (move.getPromotionPiece() != null) {
             board.addPiece(move.getEndPosition(), new ChessPiece(correctColorsTurn, move.getPromotionPiece()));
         }
-        //other players turn
-        correctColorsTurn = (correctColorsTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
+        correctColorsTurn = (correctColorsTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE; //Other players turn
     }
     /**
      * Determines if the given team is in check
@@ -116,6 +125,7 @@ public class ChessGame {
     public boolean isInCheck(ChessGame.TeamColor teamColor) {
         return isInCheck(teamColor, board);
     }
+
     // Determine if opposing teams KING is in check.
     private boolean isInCheck(ChessGame.TeamColor teamColor, ChessBoard tempBoard) {
         ChessPosition kingPos = null;
@@ -124,7 +134,7 @@ public class ChessGame {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition posInfo = new ChessPosition(row, col);
                 ChessPiece piece = tempBoard.getPiece(posInfo);
-                // Check if piece is KING
+                // Check if piece is KING (FIXED BRACES HERE)
                 if (piece != null && piece.getTeamColor() == teamColor && piece.getPieceType() == ChessPiece.PieceType.KING) {
                     kingPos = posInfo;
                     break;
@@ -149,11 +159,13 @@ public class ChessGame {
         }
         return false;
     }
-    // HELPER (isInCheck, isInStalemate) BOARD OPERATIONS
+
+    //HELPER METHOD. (isInCheck, isInStalemate) BOARD OPERATIONS
     @FunctionalInterface
     private interface BoardPositionConsumer {
         void accept(int row, int col);
     }
+
     // Iterate over every position on the board and apply the action
     private void forEachBoardPosition(BoardPositionConsumer action) {
         for (int row = 1; row <= 8; row++) {
@@ -162,8 +174,9 @@ public class ChessGame {
             }
         }
     }
+
     // Check if a team has any valid moves
-    private boolean hasAnyValidMoves(TeamColor teamColor) {
+    private boolean anyValidMoves(TeamColor teamColor) {
         final boolean[] hasMove = {false};
         forEachBoardPosition((row, col) -> {
             ChessPosition posInfo = new ChessPosition(row, col);
@@ -176,6 +189,7 @@ public class ChessGame {
         });
         return hasMove[0];
     }
+
     /**
      * Determines if the given team is in checkmate
      *
@@ -183,8 +197,9 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(ChessGame.TeamColor teamColor) {
-        return isInCheck(teamColor) && !hasAnyValidMoves(teamColor);
+        return isInCheck(teamColor) && !anyValidMoves(teamColor);
     }
+
     /**
      * Determines if the given team is in stalemate, which here is defined as having
      * no valid moves
@@ -193,8 +208,9 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        return !isInCheck(teamColor) && !hasAnyValidMoves(teamColor);
+        return !isInCheck(teamColor) && !anyValidMoves(teamColor);
     }
+
     /**
      * Sets this game's chessboard with a given board
      *
@@ -203,6 +219,7 @@ public class ChessGame {
     public void setBoard(ChessBoard board) {
         this.board = board;
     }
+
     /**
      * Gets the current chessboard
      *
