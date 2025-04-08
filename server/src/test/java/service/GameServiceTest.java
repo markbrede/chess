@@ -22,7 +22,7 @@ public class GameServiceTest {
     }
 
     @Test
-    public void getGame_ValidID_ReturnsGame() throws DataAccessException {
+    public void getValidIDReturnGame() throws DataAccessException {
         //game and return ID
         String authToken = authDAO.makeAuth("testuser");
         int gameID = gameService.createGame(authToken, "Test Game");
@@ -34,14 +34,14 @@ public class GameServiceTest {
     }
 
     @Test
-    public void getGame_InvalidID_ThrowsException() {
-        //throw ecpt fetching id that doesn't exist
+    public void getInvalidGameID() {
+        // Throw except fetching id that doesn't exist.
         assertThrows(DataAccessException.class, () ->
                 gameService.getGame(999));
     }
 
     @Test
-    public void updateGame_ValidData_UpdatesSuccessfully() throws DataAccessException {
+    public void updateGame() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
         int gameID = gameService.createGame(authToken, "Test Game");
         GameData original = gameService.getGame(gameID);//create/fetch game
@@ -64,7 +64,7 @@ public class GameServiceTest {
     }
 
     @Test
-    public void updateGame_InvalidGame_ThrowsException() throws DataAccessException {
+    public void invalidGameUpdate() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
         GameData invalidGame = new GameData(
                 999,  //fake ID
@@ -80,7 +80,7 @@ public class GameServiceTest {
     }
 
     @Test
-    public void clear_RemovesAllGames() throws DataAccessException {
+    public void clearAllGames() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
         gameService.createGame(authToken, "Test Game 1");
         gameService.createGame(authToken, "Test Game 2");
@@ -92,14 +92,14 @@ public class GameServiceTest {
     }
 
     @Test
-    public void listGames_InvalidAuth_ThrowsException() {
+    public void listInvalidAuth() {
         //try to list invalids
         assertThrows(DataAccessException.class, () ->
                 gameService.listGames("invalid token"));
     }
 
     @Test
-    public void createGame_ValidInput_ReturnsGameID() throws DataAccessException {
+    public void validInputReturnID() throws DataAccessException {
         //user and auth tok
         UserData testUser = new UserData("testuser", "password", "test@example.com");
         String authToken = authDAO.makeAuth(testUser.username()); //get token
@@ -109,13 +109,13 @@ public class GameServiceTest {
     }
 
     @Test
-    public void createGame_InvalidAuthToken_ThrowsException() {
+    public void invalidAuthTokenGame() {
         //test invalid token to creat game
         assertThrows(DataAccessException.class, () -> gameService.createGame("invalid-token", "Test Game"));
     }
 
     @Test
-    public void listGames_ValidAuthToken_ReturnsGamesList() throws DataAccessException {
+    public void validAuthTokenList() throws DataAccessException {
         //multiple game us same val tok
         String authToken = authDAO.makeAuth("testuser");
         gameService.createGame(authToken, "Test Game 1");
@@ -127,7 +127,7 @@ public class GameServiceTest {
     }
 
     @Test
-    public void joinGame_ValidRequest_JoinsSuccessfully() throws DataAccessException {
+    public void joinGameWithValidRequest() throws DataAccessException {
         //join game as white player
         String authToken = authDAO.makeAuth("testuser");
         int gameID = gameService.createGame(authToken, "Test Game");
@@ -141,7 +141,7 @@ public class GameServiceTest {
     }
 
     @Test
-    public void joinGame_PositionAlreadyTaken_ThrowsException() throws DataAccessException {
+    public void useTakenPosition() throws DataAccessException {
         //2 user + 1 game
         String authToken1 = authDAO.makeAuth("user1");
         String authToken2 = authDAO.makeAuth("user2");

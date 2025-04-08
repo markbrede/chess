@@ -80,7 +80,7 @@ public class ChessPiece {
 
     //ROOK
     private ArrayList<ChessMove> getRookMoves(ChessBoard board, ChessPosition myPosition) {
-        ArrayList<ChessMove> RookMoves = new ArrayList<>();
+        ArrayList<ChessMove> rookMoves = new ArrayList<>();
 
         //Directions
         int[][] directions = {
@@ -106,7 +106,7 @@ public class ChessPiece {
 
                 // Add move if the square is empty or contains an enemy piece
                 if (pieceOnPosition == null || pieceOnPosition.getTeamColor() != this.getTeamColor()) {
-                    RookMoves.add(new ChessMove(myPosition, newPosition, null));
+                    rookMoves.add(new ChessMove(myPosition, newPosition, null));
                 }
                 if (pieceOnPosition != null){
                     break;
@@ -114,7 +114,7 @@ public class ChessPiece {
             }
         }
 
-        return RookMoves;
+        return rookMoves;
     }
 
     //KNIGHT
@@ -150,7 +150,7 @@ public class ChessPiece {
 
     //BISHOP
     private ArrayList<ChessMove> getBishopMoves(ChessBoard board, ChessPosition myPosition) {
-        ArrayList<ChessMove> BishopMoves = new ArrayList<>();
+        ArrayList<ChessMove> bishopMoves = new ArrayList<>();
 
         int[][] directions = {
                 {1, 1},
@@ -174,7 +174,7 @@ public class ChessPiece {
 
                 // Add move if the square is empty or contains an enemy piece
                 if (pieceOnPosition == null || pieceOnPosition.getTeamColor() != this.getTeamColor()) {
-                    BishopMoves.add(new ChessMove(myPosition, newPosition, null));
+                    bishopMoves.add(new ChessMove(myPosition, newPosition, null));
                 }
                 if (pieceOnPosition != null) {
                     break;
@@ -182,17 +182,17 @@ public class ChessPiece {
             }
         }
 
-        return BishopMoves;
+        return bishopMoves;
     }
 
     //QUEEN
     private ArrayList<ChessMove> getQueenMoves(ChessBoard board, ChessPosition myPosition) {
-        ArrayList<ChessMove> QueenMoves = new ArrayList<>();
+        ArrayList<ChessMove> queenMoves = new ArrayList<>();
 
-        QueenMoves.addAll(getBishopMoves(board, myPosition));
-        QueenMoves.addAll(getRookMoves(board, myPosition));
+        queenMoves.addAll(getBishopMoves(board, myPosition));
+        queenMoves.addAll(getRookMoves(board, myPosition));
 
-        return QueenMoves;
+        return queenMoves;
     }
 
 
