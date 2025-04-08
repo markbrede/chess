@@ -6,12 +6,15 @@ import model.GameData;
 import chess.ChessGame;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import request.CreateGameRequest;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameServiceTest {
     private GameService gameService;
     private GameDAO gameDAO;
     private AuthDAO authDAO;
+    CreateGameRequest req = new CreateGameRequest("test");
 
     @BeforeEach
     public void setUp() {
@@ -25,7 +28,7 @@ public class GameServiceTest {
     public void getValidIDReturnGame() throws DataAccessException {
         //game and return ID
         String authToken = authDAO.makeAuth("testuser");
-        int gameID = gameService.createGame(authToken, "Test Game");
+        int gameID = gameService.createGame(req, authToken);
         //ID should be able to get the game
         GameData result = gameService.getGame(gameID);
 
@@ -43,7 +46,7 @@ public class GameServiceTest {
     @Test
     public void updateGame() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
-        int gameID = gameService.createGame(authToken, "Test Game");
+        int gameID = gameService.createGame(req, authToken);
         GameData original = gameService.getGame(gameID);//create/fetch game
 
         //updated fields same id
@@ -82,8 +85,8 @@ public class GameServiceTest {
     @Test
     public void clearAllGames() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
-        gameService.createGame(authToken, "Test Game 1");
-        gameService.createGame(authToken, "Test Game 2");
+        gameService.createGame(req, authToken);
+        gameService.createGame(req, authToken);
         //clear the games just made
         gameService.clear();
 
@@ -103,7 +106,7 @@ public class GameServiceTest {
         //user and auth tok
         UserData testUser = new UserData("testuser", "password", "test@example.com");
         String authToken = authDAO.makeAuth(testUser.username()); //get token
-        int gameID = gameService.createGame(authToken, "Test Game");
+        int gameID = gameService.createGame(req, authToken);
         //game id valid if > 0
         assertTrue(gameID > 0);
     }
@@ -111,15 +114,15 @@ public class GameServiceTest {
     @Test
     public void invalidAuthTokenGame() {
         //test invalid token to creat game
-        assertThrows(DataAccessException.class, () -> gameService.createGame("invalid-token", "Test Game"));
+        assertThrows(DataAccessException.class, () -> gameService.createGame(req, "Gest Tame"));
     }
 
     @Test
     public void validAuthTokenList() throws DataAccessException {
         //multiple game us same val tok
         String authToken = authDAO.makeAuth("testuser");
-        gameService.createGame(authToken, "Test Game 1");
-        gameService.createGame(authToken, "Test Game 2");
+        gameService.createGame(req, authToken);
+        gameService.createGame(req, authToken);
 
         var games = gameService.listGames(authToken);
         //2 games
@@ -130,7 +133,7 @@ public class GameServiceTest {
     public void joinGameWithValidRequest() throws DataAccessException {
         //join game as white player
         String authToken = authDAO.makeAuth("testuser");
-        int gameID = gameService.createGame(authToken, "Test Game");
+        int gameID = gameService.createGame(req, authToken);
 
         //join on white side
         assertDoesNotThrow(() -> gameService.joinGame(authToken, gameID, "WHITE"));
@@ -145,7 +148,7 @@ public class GameServiceTest {
         //2 user + 1 game
         String authToken1 = authDAO.makeAuth("user1");
         String authToken2 = authDAO.makeAuth("user2");
-        int gameID = gameService.createGame(authToken1, "Test Game");
+        int gameID = gameService.createGame(req, authToken1);
         //first user joins white
         gameService.joinGame(authToken1, gameID, "WHITE");
         //white spot should not be able to be taken

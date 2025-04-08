@@ -8,6 +8,10 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.UserData;
+import request.LoginRequest;
+import request.RegisterRequest;
+import response.LoginResponse;
+import response.RegisterResponse;
 import service.UserService;
 import spark.Request;
 import spark.Response;
@@ -28,16 +32,18 @@ public class UserHandler {
     public Object register(Request req, Response res) {
         try {
             // Parse and validate input
-            UserData userData = gson.fromJson(req.body(), UserData.class);
-            if (userData.username() == null || userData.password() == null || userData.email() == null ||
-                    userData.username().isEmpty() || userData.password().isEmpty() || userData.email().isEmpty()) {
+            RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
+            if (request.username() == null || request.password() == null || request.email() == null ||
+                    request.username().isEmpty() || request.password().isEmpty() || request.email().isEmpty()) {
                 throw new BadRequestException("Error: bad request"); // throws here
             }
 
             //create user and return response
-            AuthData authData = userService.makeUser(userData);
+            AuthData authData = userService.makeUser(request);
+            RegisterResponse response = new RegisterResponse(authData.username(), authData.authToken());
             res.status(200);
-            return gson.toJson(Map.of("username", authData.username(), "authToken", authData.authToken()));
+
+            return gson.toJson(response);
 
         } catch (BadRequestException e) {
             //empty fields or duplicate users (from DAO)
@@ -63,21 +69,22 @@ public class UserHandler {
     public Object login(Request req, Response res) {
         try {
             //parse and validate input. Not for emails tho
-            UserData userData = gson.fromJson(req.body(), UserData.class);
+            LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
             //if the username or password are missing,
-            if (userData.username() == null || userData.password() == null ||
+            if (request.username() == null || request.password() == null ||
                     //OR if the username or pass is just an empty string,
-                    userData.username().isEmpty() || userData.password().isEmpty()) {
+                    request.username().isEmpty() || request.password().isEmpty()) {
                 //then throw bad request error cause of the bad login creds
                 throw new BadRequestException("Error: bad request");
             }
 
             //if they have good creds, call userservice to attempt login
-            AuthData authData = userService.loginUser(userData);
+            AuthData authData = userService.loginUser(request);
             //stat two hundy if successful
             res.status(200);
             //json response with username and password
-            return gson.toJson(Map.of("username", authData.username(), "authToken", authData.authToken()));
+            LoginResponse response = new LoginResponse(request.username(), authData.authToken());
+            return gson.toJson(response);
 
         } catch (BadRequestException e) {
             res.status(400);

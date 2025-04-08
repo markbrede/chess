@@ -5,6 +5,8 @@ package service;
 import dataaccess.*;
 import model.AuthData;
 import model.UserData;
+import request.LoginRequest;
+import request.RegisterRequest;
 
 public class UserService {
 
@@ -16,17 +18,19 @@ public class UserService {
         this.authDAO = authDAO;
     }
     //named method makeUser so there is no confusion with the lower level method
-    public AuthData makeUser(UserData userData) throws DataAccessException {
+    public AuthData makeUser(RegisterRequest req) throws DataAccessException {
+
+        UserData userData = new UserData(req.username(), req.password(), req.email());
         userDAO.createUser(userData);
         String authToken = authDAO.makeAuth(userData.username()); //makeAuth generates token
         return new AuthData(authToken, userData.username());
     }
 
-    public AuthData loginUser(UserData userData) throws DataAccessException {
+    public AuthData loginUser(LoginRequest req) throws DataAccessException {
         //switching method to use the service's verifyUser method instead of DAO
-        if (verifyUser(userData.username(), userData.password())) {
-            String authToken = authDAO.makeAuth(userData.username());
-            return new AuthData(authToken, userData.username());
+        if (verifyUser(req.username(), req.password())) {
+            String authToken = authDAO.makeAuth(req.username());
+            return new AuthData(authToken, req.username());
         } else {
             throw new UnauthorizedException("Error: invalid username or password");
         }

@@ -4,6 +4,8 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.GameData;
+import request.CreateGameRequest;
+
 import java.util.List;
 
 public class GameService {
@@ -16,9 +18,10 @@ public class GameService {
     }
 
     //existing methods to define my business logic
-    public int createGame(String authToken, String gameName) throws DataAccessException {
+
+    public int createGame(CreateGameRequest req, String authToken) throws DataAccessException {
         authDAO.getAuth(authToken);
-        return gameDAO.createGame(gameName);
+        return gameDAO.createGame(req.gameName());
     }
 
     public GameData getGame(int gameID) throws DataAccessException {

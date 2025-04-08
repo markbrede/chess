@@ -4,6 +4,10 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.UnauthorizedException;
 import model.GameData;
+import request.CreateGameRequest;
+import request.JoinGameRequest;
+import response.CreateGameResponse;
+import response.ListGamesResponse;
 import service.GameService;
 import spark.Request;
 import spark.Response;
@@ -27,9 +31,12 @@ public class GameHandler {
                 throw new DataAccessException("Error: bad request");
             }
 
-            int gameID = gameService.createGame(authToken, request.gameName());
+            int gameID = gameService.createGame(request, authToken);
+
+            CreateGameResponse response = new CreateGameResponse(gameID);
+
             res.status(200);
-            return gson.toJson(Map.of("gameID", gameID));
+            return gson.toJson(response);
         } catch (DataAccessException e) {
             return handleException(e, res);
         }
@@ -43,8 +50,9 @@ public class GameHandler {
             }
 
             List<GameData> games = gameService.listGames(authToken);
+            ListGamesResponse response = new ListGamesResponse(games);
             res.status(200);
-            return gson.toJson(Map.of("games", games));
+            return gson.toJson(response);
         } catch (DataAccessException e) {
             return handleException(e, res);
         }
@@ -63,9 +71,7 @@ public class GameHandler {
                 throw new DataAccessException("Error: bad request");
             }
 
-            if (request.gameID() == 0 ||
-                    (request.playerColor() != null &&
-                            !List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase()))) {
+            if (!List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
                 throw new DataAccessException("Error: bad request");
             }
 
@@ -91,8 +97,4 @@ public class GameHandler {
         }
         return gson.toJson(Map.of("message", e.getMessage()));
     }
-
-    //for record classes
-    private record CreateGameRequest(String gameName) {}
-    private record JoinGameRequest(String playerColor, int gameID) {}
 }
