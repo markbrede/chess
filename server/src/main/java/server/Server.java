@@ -22,8 +22,8 @@ public class Server {
 
     public Server() {
         userDAO = new DBUserDAO(); // Was MemoryUserDAO
-        authDAO = new MemoryAuthDAO();
-        gameDAO = new MemoryGameDAO();
+        authDAO = new DBAuthDAO();
+        gameDAO = new DBGameDAO();
 
         //user service... dao dependencies
         userService = new UserService(userDAO, authDAO); //connects service to dataaccess

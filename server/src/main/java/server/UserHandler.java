@@ -80,7 +80,6 @@ public class UserHandler {
 
             //if they have good creds, call userservice to attempt login
             AuthData authData = userService.loginUser(request);
-            //stat two hundy if successful
             res.status(200);
             //json response with username and password
             LoginResponse response = new LoginResponse(request.username(), authData.authToken());
