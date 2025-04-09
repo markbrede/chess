@@ -21,7 +21,7 @@ public class Server {
     private GameHandler gameHandler;
 
     public Server() {
-        userDAO = new MemoryUserDAO();
+        userDAO = new DBUserDAO(); // Was MemoryUserDAO
         authDAO = new MemoryAuthDAO();
         gameDAO = new MemoryGameDAO();
 
