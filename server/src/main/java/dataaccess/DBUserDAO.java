@@ -9,6 +9,17 @@ import java.sql.SQLException;
 
 public class DBUserDAO implements UserDAO {
 
+    public static void main(String[] args) throws DataAccessException {
+        DBUserDAO dao = new DBUserDAO();
+
+        UserData testUser = new UserData("test", "test", "test");
+
+//        dao.createUser(testUser);
+        UserData test = dao.getUser("test");
+
+        System.out.println(test);
+    }
+
     @Override
     public void createUser(UserData user) throws DataAccessException {
         //hash password with bcrypt gensalt before storing in db
@@ -33,7 +44,7 @@ public class DBUserDAO implements UserDAO {
             throw new DataAccessException("Error: " + e.getMessage()); //for general db errs
         }
     }
-    
+
     @Override
     public UserData getUser(String username) throws DataAccessException {
         String sql = "SELECT username, password, email FROM user WHERE username = ?";
