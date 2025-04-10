@@ -79,7 +79,7 @@ public class DatabaseManager {
      */
     static Connection getConnection() throws DataAccessException {
         try {
-            // Connect to the MySQL server
+            //connect to server
             var conn = DriverManager.getConnection(CONNECTION_URL, USER, PASSWORD);
 
             // Set the default database (catalog) to the one we loaded from the properties
@@ -94,66 +94,64 @@ public class DatabaseManager {
     }
 
     static void createTables() throws DataAccessException {
-        String createTablesSQL = """
-                CREATE TABLE user (
-                    username VARCHAR(50) PRIMARY KEY,
-                    password TEXT,
-                    email TEXT
-                );
-                
-                CREATE TABLE auth (
-                    authToken VARCHAR(50) PRIMARY KEY,
-                    username TEXT
-                );
-
-                CREATE TABLE game (
-                    gameID INTEGER PRIMARY KEY,
-                    whiteUsername TEXT,
-                    blackUsername TEXT,
-                    gameName TEXT,
-                    game TEXT
-                );
-                """;
+        String[] createStatements = {
+                """
+        CREATE TABLE user (
+            username VARCHAR(50) PRIMARY KEY,
+            password TEXT,
+            email TEXT
+        )
+        """,
+                """
+        CREATE TABLE auth (
+            authToken VARCHAR(50) PRIMARY KEY,
+            username TEXT
+        )
+        """,
+                """
+        CREATE TABLE game (
+            gameID INTEGER PRIMARY KEY,
+            whiteUsername TEXT,
+            blackUsername TEXT,
+            gameName TEXT,
+            game TEXT
+        )
+        """
+        };
 
         clearTables();
 
         try {
             var conn = getConnection();
 
-//
-
-            // Use try-with-resources to auto-close the statement when done
-            try (var preparedStatement = conn.prepareStatement(createTablesSQL)) {
-                preparedStatement.executeUpdate(); // Run the SQL command
+            try (var statement = conn.createStatement()) {
+                for (String sql : createStatements) {
+                    statement.executeUpdate(sql);
+                }
             }
         } catch (SQLException e) {
-            // If any SQL error occurs, wrap and rethrow as a custom exception
             throw new DataAccessException(e.getMessage());
         }
-
     }
 
     static void clearTables() throws DataAccessException {
-
-        String dropTablesSQL = """
-                DROP TABLE IF EXISTS user;
-                DROP TABLE IF EXISTS auth;
-                DROP TABLE IF EXISTS game;
-
-            """;
+        String[] dropStatements = {
+                "DROP TABLE IF EXISTS user",
+                "DROP TABLE IF EXISTS auth",
+                "DROP TABLE IF EXISTS game"
+        };
 
         try {
             var conn = getConnection();
 
-            try (var preparedStatement = conn.prepareStatement(dropTablesSQL)) {
-                preparedStatement.executeUpdate(); // Run the SQL command
+            try (var statement = conn.createStatement()) {
+                for (String sql : dropStatements) {
+                    statement.executeUpdate(sql);
+                }
             }
-
-            // Use try-with-resources to auto-close the statement when done
         } catch (SQLException e) {
-            // If any SQL error occurs, wrap and rethrow as a custom exception
             throw new DataAccessException(e.getMessage());
         }
-
     }
+    
 }
