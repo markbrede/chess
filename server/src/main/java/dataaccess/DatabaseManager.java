@@ -94,17 +94,52 @@ public class DatabaseManager {
     }
 
     static void createTables() throws DataAccessException {
+        String createTablesSQL = """
+                CREATE TABLE user (
+                    username VARCHAR(50) PRIMARY KEY,
+                    password TEXT,
+                    email TEXT
+                );
+                
+                CREATE TABLE auth (
+                    authToken VARCHAR(50) PRIMARY KEY,
+                    username TEXT
+                );
+
+                CREATE TABLE game (
+                    gameID INTEGER PRIMARY KEY,
+                    whiteUsername TEXT,
+                    blackUsername TEXT,
+                    gameName TEXT,
+                    game TEXT
+                );
+                """;
+
+        clearTables();
+
+        try {
+            var conn = getConnection();
+
+//
+
+            // Use try-with-resources to auto-close the statement when done
+            try (var preparedStatement = conn.prepareStatement(createTablesSQL)) {
+                preparedStatement.executeUpdate(); // Run the SQL command
+            }
+        } catch (SQLException e) {
+            // If any SQL error occurs, wrap and rethrow as a custom exception
+            throw new DataAccessException(e.getMessage());
+        }
+
+    }
+
+    static void clearTables() throws DataAccessException {
 
         String dropTablesSQL = """
-            DROP TABLE IF EXISTS user;
-        """;
-        
-        String createUserTableSQL = """
-            CREATE TABLE user (
-                username VARCHAR(50) PRIMARY KEY,
-                password TEXT,
-                email TEXT
-            );
+                DROP TABLE IF EXISTS user;
+                DROP TABLE IF EXISTS auth;
+                DROP TABLE IF EXISTS game;
+
             """;
 
         try {
@@ -115,9 +150,6 @@ public class DatabaseManager {
             }
 
             // Use try-with-resources to auto-close the statement when done
-            try (var preparedStatement = conn.prepareStatement(createUserTableSQL)) {
-                preparedStatement.executeUpdate(); // Run the SQL command
-            }
         } catch (SQLException e) {
             // If any SQL error occurs, wrap and rethrow as a custom exception
             throw new DataAccessException(e.getMessage());
