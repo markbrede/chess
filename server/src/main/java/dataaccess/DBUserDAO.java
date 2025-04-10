@@ -33,15 +33,14 @@ public class DBUserDAO implements UserDAO {
             stmt.setString(1, user.username());
             stmt.setString(2, hashedPassword);//Hashed! cannot use UserData's str pw
             stmt.setString(3, user.email());
-            //add to storage. like users.put in mem dao
-            stmt.executeUpdate();
+            stmt.executeUpdate(); //add to storage. like users.put in mem dao
         }
-        //like me memory contains.key except for the db level
+        //like my memory dao "contains.key" except for at DB level
         catch (SQLException e) {
             if (e.getMessage().contains("Duplicate entry")) {
                 throw new BadRequestException("Error: username already exists"); //reuse mem dao exceptions
             }
-            throw new DataAccessException("Error: " + e.getMessage()); //for general db errs
+            throw new DataAccessException("Error: " + e.getMessage()); //for general DB errs
         }
     }
 
