@@ -7,6 +7,7 @@ import model.AuthData;
 import model.UserData;
 import request.LoginRequest;
 import request.RegisterRequest;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UserService {
 
@@ -38,9 +39,8 @@ public class UserService {
 
     //verifyUser cause authUser looks wrong in the userDAO interface
     public boolean verifyUser(String username, String password) throws DataAccessException {
-        //call userDAO.getUser since I moved this method from MemoryUserDAO to UserService
         UserData user = userDAO.getUser(username);
-        return user.password().equals(password);
+        return BCrypt.checkpw(password, user.password());
     }
 
     public void logoutUser(String authToken) throws DataAccessException {
