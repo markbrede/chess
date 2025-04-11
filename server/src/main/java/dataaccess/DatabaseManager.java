@@ -86,8 +86,8 @@ public class DatabaseManager {
                 """
         CREATE TABLE user (
             username VARCHAR(50) PRIMARY KEY,
-            password TEXT,
-            email TEXT
+            password TEXT NOT NULL,
+            email TEXT NOT NULL
         )
         """,
                 """

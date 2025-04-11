@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 public class DBUserDAO implements UserDAO {
 
+    //will delete after all user test implemented
     public static void main(String[] args) throws DataAccessException {
         DBUserDAO dao = new DBUserDAO();
 
@@ -22,6 +23,16 @@ public class DBUserDAO implements UserDAO {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
+        //Validations checks to address my failing failNullFieldUser test
+        if (user.username() == null || user.username().isEmpty()) {
+            throw new BadRequestException("Error: username required");
+        }
+        if (user.password() == null || user.password().isEmpty()) {
+            throw new BadRequestException("Error: password required");
+        }
+        if (user.email() == null || user.email().isEmpty()) {
+            throw new BadRequestException("Error: email required");
+        }
         //hash password with bcrypt gensalt before storing in db
         String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
         //db equivalent to my hashmap in mem dao
