@@ -78,8 +78,7 @@ public class DBUserDAO implements UserDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.executeUpdate();
-        }
-        catch (SQLException | DataAccessException e) {
+        } catch (SQLException | DataAccessException e) {
             System.err.println("Error clearing user table: " + e.getMessage());//no longer simply clearing memory
         }
     }

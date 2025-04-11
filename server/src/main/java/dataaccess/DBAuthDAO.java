@@ -88,4 +88,5 @@ public class DBAuthDAO implements AuthDAO {
             System.err.println("Error clearing auth table: " + e.getMessage());//no longer simply clearing memory
         }
     }
+
 }
