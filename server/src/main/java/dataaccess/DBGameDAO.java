@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DBGameDAO implements GameDAO {
@@ -24,7 +23,7 @@ public class DBGameDAO implements GameDAO {
 
         ChessGame newGame = new ChessGame();
         String gameJson = gson.toJson(newGame); //ChessGame converted to json
-        int newGameID = getNextGameId(); //new game ID
+        int newGameID = getNextGameID(); //new game ID
         //to DB
         String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)";
 
@@ -44,11 +43,23 @@ public class DBGameDAO implements GameDAO {
             throw new DataAccessException("Error creating game: " + e.getMessage());
         }
     }
-
     //No longer working with memory... I need to create a way to make multiple game request possible
-    private int getNextGameId() throws DataAccessException {
+    private int getNextGameID() throws DataAccessException {
+        String sql = "SELECT MAX(gameID) FROM game";
 
-        return 0;
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) { //set result
+
+            if (rs.next()) { //max game ID in the table
+                int maxID = rs.getInt(1); //get the first cols val.
+                return maxID + 1; //adding a +1 iteration to easily make a unique ID
+            }
+            //1 for no ID situations
+            return 1;
+        } catch (SQLException e) {
+            throw new DataAccessException("Error: Couldnt get next game ID: " + e.getMessage());
+        }
     }
 
 
