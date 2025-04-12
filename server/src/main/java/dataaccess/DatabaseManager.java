@@ -12,6 +12,7 @@ public class DatabaseManager {
     private static final String CONNECTION_URL;
 
     public static void main(String[] args) throws DataAccessException {
+        DatabaseManager.createDatabase();
         DatabaseManager.createTables();
     }
 
