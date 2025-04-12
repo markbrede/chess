@@ -10,11 +10,11 @@ public class DatabaseManager {
     private static final String USER;
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
-
-    public static void main(String[] args) throws DataAccessException {
-        DatabaseManager.createDatabase();
-        DatabaseManager.createTables();
-    }
+//
+//    public static void main(String[] args) throws DataAccessException {
+//        DatabaseManager.createDatabase();
+//        DatabaseManager.createTables();
+//    }
 
     /**
      * Static block runs once when the class is first loaded.
@@ -60,6 +60,8 @@ public class DatabaseManager {
             try (var preparedStatement = conn.prepareStatement(statement)) {
                 preparedStatement.executeUpdate(); // Run the SQL command
             }
+
+            createTables();
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
         }
