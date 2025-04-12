@@ -21,12 +21,15 @@ public class Server {
     private GameHandler gameHandler;
 
     public Server() {
-        userDAO = new DBUserDAO(); // Was MemoryUserDAO
-        authDAO = new DBAuthDAO();
-        gameDAO = new DBGameDAO();
+        try {
+            userDAO = DAOFactory.createUserDAO();
+            authDAO = DAOFactory.createAuthDAO();
+            gameDAO = DAOFactory.createGameDAO();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("DAO initialization failed", e);
+        }
 
-        //user service... dao dependencies
-        userService = new UserService(userDAO, authDAO); //connects service to dataaccess
+        userService = new UserService(userDAO, authDAO);
         gameService = new GameService(gameDAO, authDAO);
 
         //user handler... user service dependencies
