@@ -85,20 +85,20 @@ public class DatabaseManager {
     static void createTables() throws DataAccessException {
         String[] createStatements = {
                 """
-        CREATE TABLE user (
+        CREATE TABLE IF NOT EXISTS user (
             username VARCHAR(50) PRIMARY KEY,
             password TEXT NOT NULL,
             email TEXT NOT NULL
         )
         """,
                 """
-        CREATE TABLE auth (
+        CREATE TABLE IF NOT EXISTS auth (
             authToken VARCHAR(50) PRIMARY KEY,
             username TEXT
         )
         """,
                 """
-        CREATE TABLE game (
+        CREATE TABLE IF NOT EXISTS game (
             gameID INTEGER PRIMARY KEY,
             whiteUsername TEXT,
             blackUsername TEXT,
