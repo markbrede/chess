@@ -10,12 +10,6 @@ public class DatabaseManager {
     private static final String USER;
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
-//
-//    public static void main(String[] args) throws DataAccessException {
-//        DatabaseManager.createDatabase();
-//        DatabaseManager.createTables();
-//    }
-
     /**
      * Static block runs once when the class is first loaded.
      * It loads database configuration values from the db.properties file.
@@ -41,6 +35,8 @@ public class DatabaseManager {
                 //make the JDBC connection URL for MySQL
                 CONNECTION_URL = String.format("jdbc:mysql://%s:%d", host, port);
             }
+
+            DatabaseManager.createDatabase();
         } catch (Exception ex) {
             throw new RuntimeException("unable to process db.properties. " + ex.getMessage());
         }
