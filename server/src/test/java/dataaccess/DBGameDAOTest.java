@@ -47,7 +47,7 @@ public class DBGameDAOTest {
     }
 
     @Test
-    public void failGetGameInvalidID() {
+    public void failGetGameInvaliddD() {
         assertThrows(DataAccessException.class, () -> {
             gameDAO.getGame(999);
         }, "Invalid game ID needs to throw DataAccessException");
@@ -86,7 +86,7 @@ public class DBGameDAOTest {
     }
 
     @Test
-    public void failUpdateGameInvalidID() {
+    public void failUpdateGameInvalidId() {
         GameData fakeGame = new GameData(999, null, null, "Fake", new ChessGame());
 
         assertThrows(DataAccessException.class, () -> {
