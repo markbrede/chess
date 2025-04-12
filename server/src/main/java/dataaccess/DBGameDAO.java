@@ -96,7 +96,7 @@ public class DBGameDAO implements GameDAO {
 
     @Override
     public List<GameData> listGames() throws DataAccessException {
-        String sql = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM game";
+        String sql = "SELECT gameId, whiteUsername, blackUsername, gameName, game FROM game";
         List<GameData> games = new ArrayList<>();
 
         try (Connection conn = DatabaseManager.getConnection();
