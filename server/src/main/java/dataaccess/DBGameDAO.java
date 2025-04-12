@@ -25,21 +25,21 @@ public class DBGameDAO implements GameDAO {
 
         ChessGame newGame = new ChessGame();
         String gameJson = gson.toJson(newGame); //ChessGame converted to json
-        int newGameID = getNextGameId(); //new game ID
+        int newGameId = getNextGameId(); //new game ID
         //to DB
         String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, newGameID);
+            stmt.setInt(1, newGameId);
             stmt.setString(2, null);//these two are null cause no W/B team starting out
             stmt.setString(3, null);
             stmt.setString(4, gameName);
             stmt.setString(5, gameJson);
             stmt.executeUpdate();
 
-            return newGameID;
+            return newGameId;
 
         } catch (SQLException e) {
             throw new DataAccessException("Error creating game: " + e.getMessage());
