@@ -36,16 +36,7 @@ public class DBGameDAOTest {
             gameDAO.createGame("");
         }, "Empty game name should throw BadRequestException");
     }
-
-   // @Test
-   // public void passGetGameValid() throws DataAccessException {
-   //     int gameId = gameDAO.createGame("Retrieval Test");
-   //     GameData game = gameDAO.getGame(gameId);
-
-   //     assertNotNull(game, "Game should be retrievable");
-   //     assertEquals(gameId, game.gameId(), "Game id should match");
-   //}
-
+    
     @Test
     public void failGetGameInvaliddD() {
         assertThrows(DataAccessException.class, () -> {
