@@ -75,7 +75,7 @@ public class DBGameDAO implements GameDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    int ID = rs.getInt("gameID");
+                    int id = rs.getInt("gameID");
                     String whiteUsername = rs.getString("whiteUsername");
                     String blackUsername = rs.getString("blackUsername");
                     String gameName = rs.getString("gameName");
@@ -84,7 +84,7 @@ public class DBGameDAO implements GameDAO {
                     // Deserialize the game JSON to a ChessGame object
                     ChessGame game = gson.fromJson(gameJson, ChessGame.class);
 
-                    return new GameData(ID, whiteUsername, blackUsername, gameName, game);
+                    return new GameData(id, whiteUsername, blackUsername, gameName, game);
                 } else {
                     throw new DataAccessException("Couldn't find game with ID: " + gameID);
                 }
@@ -104,14 +104,14 @@ public class DBGameDAO implements GameDAO {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                int ID = rs.getInt("gameID");
+                int id = rs.getInt("gameID");
                 String whiteUsername = rs.getString("whiteUsername");
                 String blackUsername = rs.getString("blackUsername");
                 String gameName = rs.getString("gameName");
                 String gameJson = rs.getString("game");
 
                 ChessGame game = gson.fromJson(gameJson, ChessGame.class); //deserialize gameJson
-                games.add(new GameData(ID, whiteUsername, blackUsername, gameName, game));
+                games.add(new GameData(id, whiteUsername, blackUsername, gameName, game));
             }
             return games;
 
