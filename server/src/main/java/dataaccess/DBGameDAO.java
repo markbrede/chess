@@ -25,7 +25,7 @@ public class DBGameDAO implements GameDAO {
 
         ChessGame newGame = new ChessGame();
         String gameJson = gson.toJson(newGame); //ChessGame converted to json
-        int newGameID = getNextGameID(); //new game ID
+        int newGameID = getNextGameId(); //new game ID
         //to DB
         String sql = "INSERT INTO game (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?, ?, ?, ?, ?)";
 
@@ -47,7 +47,7 @@ public class DBGameDAO implements GameDAO {
     }
 
     //No longer working with memory... I need to create a way to make multiple game request possible
-    private int getNextGameID() throws DataAccessException {
+    private int getNextGameId() throws DataAccessException {
         String sql = "SELECT MAX(gameID) FROM game";
 
         try (Connection conn = DatabaseManager.getConnection();
