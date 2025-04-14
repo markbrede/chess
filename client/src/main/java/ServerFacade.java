@@ -1,6 +1,8 @@
 import com.google.gson.Gson;
 import request.RegisterRequest;
 import response.RegisterResponse;
+import request.LoginRequest;
+import response.LoginResponse;
 
 import java.io.*;
 import java.net.*;
@@ -16,24 +18,43 @@ public class ServerFacade {
     public static void main (String[] args) throws Exception {
         ServerFacade facade = new ServerFacade("http://localhost:8080");
 
-        RegisterResponse res = facade.register("brandon1", "password", "brandon@gmail.com");
+        RegisterResponse res = facade.register("mark1", "password", "mark@gmail.com");
         System.out.println();
     }
 
+//REGISTER
     public RegisterResponse register(String username, String password, String email) throws Exception {
         RegisterRequest req = new RegisterRequest(username, password, email);
         var path = "/user";
-        return this.makeRequest("POST", path, req, RegisterResponse.class);
+        return this.makeRequest("POST", path, req, RegisterResponse.class, null);
     }
+
+//LOGIN
+    public LoginResponse login(String username, String password) throws Exception {
+        LoginRequest req = new LoginRequest(username, password);
+        var path = "/session";
+        return this.makeRequest("POST", path, req, LoginResponse.class, null);
+    }
+
+//LOGOUT
+    public void logout(String authToken) throws Exception {
+        var path = "/session";
+        this.makeRequest("DELETE", path, null, null, authToken);
+    }
+
+
+
+//CLEAR
+    public void clearDatabase() throws Exception {
+        var path = "/db";
+        this.makeRequest("DELETE", path, null, null, null);
+    }
+
+
 
     public void deletePet(int id) throws Exception {
         var path = String.format("/pet/%s", id);
-        this.makeRequest("DELETE", path, null, null);
-    }
-
-    public void deleteAllPets() throws Exception {
-        var path = "/pet";
-        this.makeRequest("DELETE", path, null, null);
+        this.makeRequest("DELETE", path, null, null, null);
     }
 
 //    public Pet[] listPets() throws Exception {
@@ -44,12 +65,16 @@ public class ServerFacade {
 //        return response.pet();
 //    }
 
-    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass) throws Exception {
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authtoken) throws Exception {
         try {
             URL url = (new URI(serverUrl + path)).toURL();
             HttpURLConnection http = (HttpURLConnection) url.openConnection();
             http.setRequestMethod(method);
             http.setDoOutput(true);
+
+            if (authtoken != null) {
+                // set headers
+            }
 
             writeBody(request, http);
             http.connect();
