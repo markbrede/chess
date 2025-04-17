@@ -3,9 +3,14 @@ import request.RegisterRequest;
 import response.RegisterResponse;
 import request.LoginRequest;
 import response.LoginResponse;
+import request.CreateGameRequest;
+import request.JoinGameRequest;
+import response.CreateGameResponse;
+import response.ListGamesResponse;
 
 import java.io.*;
 import java.net.*;
+import java.util.Map;
 
 public class ServerFacade {
 
@@ -15,55 +20,51 @@ public class ServerFacade {
         serverUrl = url;
     }
 
-    public static void main (String[] args) throws Exception {
-        ServerFacade facade = new ServerFacade("http://localhost:8080");
-
-        RegisterResponse res = facade.register("mark1", "password", "mark@gmail.com");
-        System.out.println();
-    }
-
-//REGISTER
+    //registration
     public RegisterResponse register(String username, String password, String email) throws Exception {
         RegisterRequest req = new RegisterRequest(username, password, email);
         var path = "/user";
         return this.makeRequest("POST", path, req, RegisterResponse.class, null);
     }
 
-//LOGIN
+    //login
     public LoginResponse login(String username, String password) throws Exception {
         LoginRequest req = new LoginRequest(username, password);
         var path = "/session";
         return this.makeRequest("POST", path, req, LoginResponse.class, null);
     }
 
-//LOGOUT
+    //logout
     public void logout(String authToken) throws Exception {
         var path = "/session";
         this.makeRequest("DELETE", path, null, null, authToken);
     }
 
+    //list games
+    public ListGamesResponse listGames(String authToken) throws Exception {
+        var path = "/game";
+        return this.makeRequest("GET", path, null, ListGamesResponse.class, authToken);
+    }
 
+    //create game
+    public CreateGameResponse createGame(String gameName, String authToken) throws Exception {
+        CreateGameRequest req = new CreateGameRequest(gameName);
+        var path = "/game";
+        return this.makeRequest("POST", path, req, CreateGameResponse.class, authToken);
+    }
 
-//CLEAR
+    //join game
+    public void joinGame(String playerColor, int gameID, String authToken) throws Exception {
+        JoinGameRequest req = new JoinGameRequest(playerColor, gameID);
+        var path = "/game";
+        this.makeRequest("PUT", path, req, null, authToken);
+    }
+
+    //clear database... testing
     public void clearDatabase() throws Exception {
         var path = "/db";
         this.makeRequest("DELETE", path, null, null, null);
     }
-
-
-
-    public void deletePet(int id) throws Exception {
-        var path = String.format("/pet/%s", id);
-        this.makeRequest("DELETE", path, null, null, null);
-    }
-
-//    public Pet[] listPets() throws Exception {
-//        var path = "/pet";
-//        record listPetResponse(Pet[] pet) {
-//        }
-//        var response = this.makeRequest("GET", path, null, listPetResponse.class);
-//        return response.pet();
-//    }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authtoken) throws Exception {
         try {
@@ -73,7 +74,7 @@ public class ServerFacade {
             http.setDoOutput(true);
 
             if (authtoken != null) {
-                // set headers
+                http.setRequestProperty("Authorization", authtoken);
             }
 
             writeBody(request, http);
@@ -84,7 +85,6 @@ public class ServerFacade {
             throw ex;
         }
     }
-
 
     private static void writeBody(Object request, HttpURLConnection http) throws IOException {
         if (request != null) {
@@ -101,11 +101,14 @@ public class ServerFacade {
         if (!isSuccessful(status)) {
             try (InputStream respErr = http.getErrorStream()) {
                 if (respErr != null) {
-                    throw new Exception("error");
+                    InputStreamReader reader = new InputStreamReader(respErr);
+                    var error = new Gson().fromJson(reader, Map.class);
+                    if (error != null && error.containsKey("message")) {
+                        throw new Exception((String) error.get("message"));
+                    }
                 }
             }
-
-            throw new Exception();
+            throw new Exception("Error: " + status);
         }
     }
 
@@ -121,7 +124,6 @@ public class ServerFacade {
         }
         return response;
     }
-
 
     private boolean isSuccessful(int status) {
         return status / 100 == 2;
