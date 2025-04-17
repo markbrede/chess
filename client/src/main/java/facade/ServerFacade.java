@@ -1,3 +1,5 @@
+package facade;
+
 import com.google.gson.Gson;
 import request.RegisterRequest;
 import response.RegisterResponse;
