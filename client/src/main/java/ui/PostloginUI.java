@@ -4,6 +4,7 @@ import model.GameData;
 import response.CreateGameResponse;
 import response.ListGamesResponse;
 import facade.ServerFacade;
+import ui.ChessBoardUI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +119,80 @@ public class PostloginUI extends UI {
         }
     }
 
-    private void playGame() {}
+    private void playGame() {
+        if (gamesList.isEmpty()) {
+            displayMessage("No games available. Use 'list' command to refresh the games list.");
+            return;
+        }
 
-    private void observeGame() {}
+        try {
+            String gameNumberStr = promptUser("Game number: ");
+            int gameNumber = Integer.parseInt(gameNumberStr);
+
+            if (gameNumber < 1 || gameNumber > gamesList.size()) {
+                displayErrorMessage("Invalid game number.");
+                return;
+            }
+
+            GameData selectedGame = gamesList.get(gameNumber - 1);
+
+            String color = promptUser("Color (WHITE/BLACK): ").toUpperCase();
+            if (!color.equals("WHITE") && !color.equals("BLACK")) {
+                displayErrorMessage("Invalid color. You must choose WHITE or BLACK.");
+                return;
+            }
+
+            int gameID = selectedGame.gameID();
+            facade.joinGame(color, gameID, authToken);
+
+            displayMessage("You successfully joined the game as the " + color + " player.");
+
+            //draws board
+            ChessBoardUI chessboardUI = new ChessBoardUI();
+            chessboardUI.drawBoard(color.equals("WHITE"), selectedGame.game());
+
+            promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
+
+        } catch (NumberFormatException e) {
+            displayErrorMessage("Invalid format for game number");
+        } catch (Exception e) {
+            displayErrorMessage("Could not join game: " + e.getMessage());
+        }
+    }
+
+    private void observeGame() {
+        if (gamesList.isEmpty()) {
+            displayMessage("No games are available. the 'list' command will refresh the games list.");
+            return;
+        }
+
+        try {
+            String gameNumberStr = promptUser("Game number: ");
+            int gameNumber = Integer.parseInt(gameNumberStr);
+
+            if (gameNumber < 1 || gameNumber > gamesList.size()) {
+                displayErrorMessage("Invalid game number.");
+                return;
+            }
+
+            GameData selectedGame = gamesList.get(gameNumber - 1);
+            int gameID = selectedGame.gameID();
+
+            //joining a game as an observer
+            facade.joinGame(null, gameID, authToken);
+
+            displayMessage("You've joined the game as an observer.");
+
+            //draw board from white sides view
+            ChessBoardUI chessboardUI = new ChessBoardUI();
+            chessboardUI.drawBoard(true, selectedGame.game());
+
+            promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
+
+        } catch (NumberFormatException e) {
+            displayErrorMessage("Invalid format for game number");
+        } catch (Exception e) {
+            displayErrorMessage("Could not observe game: " + e.getMessage());
+        }
+    }
 }
