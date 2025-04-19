@@ -71,8 +71,8 @@ public class PreloginUI extends UI {
             displayMessage("Login successful! Welcome, " + response.username() + "!");
 
             // will transition to PostloginUI. I haven't implemented it yet
-            // PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
-            // postloginUI.run();
+            PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
+            postloginUI.run();
 
             // check if continue running prelogin after return
             if (!running) {
@@ -94,8 +94,8 @@ public class PreloginUI extends UI {
             displayMessage("Registration successful! Welcome, " + response.username() + "!");
 
             // will transition to PostloginUI. I haven't implemented it yet
-            // PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
-            // postloginUI.run();
+            PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
+            postloginUI.run();
 
             //check if continue running prelogin after return
             if (!running) {

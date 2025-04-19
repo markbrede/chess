@@ -34,16 +34,6 @@ public class ChessPosition {
         return col;
     }//Added return col;
 
-
-
-
-
-
-
-
-
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
