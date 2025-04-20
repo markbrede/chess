@@ -141,6 +141,9 @@ public class ServerFacadeTests {
     public void passObserveGame() throws Exception {
         var auth = facade.register(testUser, testPassword, testEmail);
         var game = facade.createGame("Observable Meditations", auth.authToken());
+
+        //pass null to join as observer
         assertDoesNotThrow(() -> facade.joinGame(null, game.gameID(), auth.authToken()));
     }
+
 }

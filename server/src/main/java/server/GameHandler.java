@@ -67,11 +67,13 @@ public class GameHandler {
 
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
-            if (request.gameID() == 0 || request.playerColor() == null) {
+            if (request.gameID() == 0) {
                 throw new DataAccessException("Error: bad request");
             }
 
-            if (!List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
+            //only validate color if it's not null (for observe)
+            if (request.playerColor() != null &&
+                !List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
                 throw new DataAccessException("Error: bad request");
             }
 
@@ -85,7 +87,7 @@ public class GameHandler {
 
     //updating exception handler cause of 400 instead of 500 err
     private Object handleException(DataAccessException e, Response res) {
-        // Check exception type first
+        //exception type check first
         if (e instanceof UnauthorizedException) {
             res.status(401);
         } else if (e.getMessage().equals("Error: bad request")) {
@@ -95,6 +97,9 @@ public class GameHandler {
         } else {
             res.status(500);
         }
+
+        //setting content type to ensure proper json parsing
+        res.type("application/json");
         return gson.toJson(Map.of("message", e.getMessage()));
     }
 }
