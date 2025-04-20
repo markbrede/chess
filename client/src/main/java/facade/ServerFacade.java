@@ -101,16 +101,27 @@ public class ServerFacade {
     private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, Exception {
         var status = http.getResponseCode();
         if (!isSuccessful(status)) {
+            String errorMessage = "";
             try (InputStream respErr = http.getErrorStream()) {
                 if (respErr != null) {
                     InputStreamReader reader = new InputStreamReader(respErr);
                     var error = new Gson().fromJson(reader, Map.class);
                     if (error != null && error.containsKey("message")) {
-                        throw new Exception((String) error.get("message"));
+                        errorMessage = (String) error.get("message");
                     }
                 }
             }
-            throw new Exception("Error: " + status);
+
+            //meaning full error messages
+            if (status == 401) {
+                throw new Exception("Error: unauthorized - " + errorMessage);
+            } else if (status == 400) {
+                throw new Exception("Error: bad request - " + errorMessage);
+            } else if (!errorMessage.isEmpty()) {
+                throw new Exception(errorMessage);
+            } else {
+                throw new Exception("Error: " + status);
+            }
         }
     }
 

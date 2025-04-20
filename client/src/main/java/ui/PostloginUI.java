@@ -136,7 +136,7 @@ public class PostloginUI extends UI {
 
             GameData selectedGame = gamesList.get(gameNumber - 1);
 
-            String color = promptUser("Color (WHITE/BLACK): ").toUpperCase();
+            String color = promptUser("Color (WHITE/BLACK): ").toUpperCase().trim(); //added trim
             if (!color.equals("WHITE") && !color.equals("BLACK")) {
                 displayErrorMessage("Invalid color. You must choose WHITE or BLACK.");
                 return;
