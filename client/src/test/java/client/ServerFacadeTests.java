@@ -130,12 +130,13 @@ public class ServerFacadeTests {
 
         Exception colorEx = assertThrows(Exception.class, () ->
                 facade.joinGame("GOLD", game.gameID(), auth.authToken()));
-        assertTrue(colorEx.getMessage().toLowerCase().contains("bad request"));
+        assertEquals("bad request", colorEx.getMessage().toLowerCase());
 
         Exception gameEx = assertThrows(Exception.class, () ->
                 facade.joinGame("WHITE", 9999, auth.authToken()));
-        assertTrue(gameEx.getMessage().toLowerCase().contains("bad request"));
+        assertTrue(gameEx.getMessage().toLowerCase().contains("couldn't find game"));
     }
+
 
     @Test
     public void passObserveGame() throws Exception {

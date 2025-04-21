@@ -112,11 +112,11 @@ public class ServerFacade {
                 }
             }
 
-            //meaning full error messages
+            //meaningful error messages
             if (status == 401) {
-                throw new Exception("Error: unauthorized - " + errorMessage);
+                throw new Exception("unauthorized");
             } else if (status == 400) {
-                throw new Exception("Error: bad request - " + errorMessage);
+                throw new Exception("bad request");
             } else if (!errorMessage.isEmpty()) {
                 throw new Exception(errorMessage);
             } else {
