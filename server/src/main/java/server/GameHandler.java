@@ -62,7 +62,7 @@ public class GameHandler {
         try {
             String authToken = req.headers("Authorization");
             if (authToken == null || authToken.isEmpty()) {
-                throw new DataAccessException("Error: unauthorized");
+                throw new UnauthorizedException("Error: unauthorized");
             }
 
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
@@ -71,19 +71,22 @@ public class GameHandler {
                 throw new DataAccessException("Error: bad request");
             }
 
-            //only validate color if it's not null (for observe)
+            //validate color. Don't validate for observer
             if (request.playerColor() != null &&
                 !List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
                 throw new DataAccessException("Error: bad request");
             }
 
+            //valid for observer or valid player
             gameService.joinGame(authToken, request.gameID(), request.playerColor());
+
             res.status(200);
             return "{}";
         } catch (DataAccessException e) {
             return handleException(e, res);
         }
     }
+
 
     //updating exception handler cause of 400 instead of 500 err
     private Object handleException(DataAccessException e, Response res) {
