@@ -27,7 +27,8 @@ public class PostloginUI extends UI {
 
     public void run() {
         clearScreen();
-        displayWelcomeMessage();
+        System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+        displayMessage("\n♛ Welcome, " + username + "!");
         displayHelp();
 
         while (running) {
@@ -89,6 +90,11 @@ public class PostloginUI extends UI {
     private void createGame() {
         String gameName = promptUser("Game name: ");
 
+        if (gameName == null || gameName.trim().isEmpty()) {
+            displayErrorMessage("Game name can't be empty.");
+            return;
+        }
+
         try {
             CreateGameResponse response = facade.createGame(gameName, authToken);
             displayMessage("Game created successfully with ID: " + response.gameID());
@@ -136,6 +142,11 @@ public class PostloginUI extends UI {
 
             GameData selectedGame = gamesList.get(gameNumber - 1);
 
+            if (selectedGame.game() == null) {
+                displayErrorMessage("The board could not be generated due to no available game data.");
+                return;
+            }
+
             String color = promptUser("Color (WHITE/BLACK): ").toUpperCase().trim(); //added trim
             if (!color.equals("WHITE") && !color.equals("BLACK")) {
                 displayErrorMessage("Invalid color. You must choose WHITE or BLACK.");
@@ -143,6 +154,13 @@ public class PostloginUI extends UI {
             }
 
             int gameID = selectedGame.gameID();
+
+            if ((color.equals("WHITE") && selectedGame.whiteUsername() != null) ||
+                (color.equals("BLACK") && selectedGame.blackUsername() != null)) {
+                displayErrorMessage("That side is already taken.");
+                return;
+            }
+
             facade.joinGame(color, gameID, authToken);
 
             displayMessage("You successfully joined the game as the " + color + " player.");
@@ -162,7 +180,7 @@ public class PostloginUI extends UI {
 
     private void observeGame() {
         if (gamesList.isEmpty()) {
-            displayMessage("No games are available. the 'list' command will refresh the games list.");
+            displayMessage("No games are available. Use the 'list' command to refresh the games list.");
             return;
         }
 
@@ -176,6 +194,12 @@ public class PostloginUI extends UI {
             }
 
             GameData selectedGame = gamesList.get(gameNumber - 1);
+
+            if (selectedGame.game() == null) {
+                displayErrorMessage("The board could not be generated due to no available game data.");
+                return;
+            }
+
             int gameID = selectedGame.gameID();
 
             //joining a game as an observer

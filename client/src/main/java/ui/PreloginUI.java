@@ -26,6 +26,7 @@ public class PreloginUI extends UI {
     }
 
     private void displayWelcomeMessage() {
+        System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
         displayMessage("\n♕ Welcome to Chess! ♕");
     }
 
@@ -66,13 +67,20 @@ public class PreloginUI extends UI {
         String username = promptUser("Username: ");
         String password = promptUser("Password: ");
 
+        if (username.isEmpty() || password.isEmpty()) {
+            displayErrorMessage("Username and password cannot be empty.");
+            return;
+        }
+
         try {
             LoginResponse response = facade.login(username, password);
             displayMessage("Login successful! Welcome, " + response.username() + "!");
 
             // will transition to PostloginUI. I haven't implemented it yet
             PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
+            clearScreen();
             postloginUI.run();
+            clearScreen();
 
             // check if continue running prelogin after return
             if (!running) {
@@ -88,6 +96,11 @@ public class PreloginUI extends UI {
         String username = promptUser("Username: ");
         String password = promptUser("Password: ");
         String email = promptUser("Email: ");
+
+        if (username.isEmpty() || password.isEmpty()) {
+            displayErrorMessage("Username and password cannot be empty.");
+            return;
+        }
 
         try {
             RegisterResponse response = facade.register(username, password, email);

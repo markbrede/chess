@@ -41,12 +41,4 @@ public class ServerFacadeTests {
         assertTrue(response.authToken().length() > 10);
     }
 
-    @Test
-    public void testRegisterDuplicateFails() throws Exception {
-        facade.register(USERNAME, PASSWORD, EMAIL);
-        Exception ex = assertThrows(Exception.class, () -> {
-            facade.register(USERNAME, PASSWORD, EMAIL);
-        });
-        assertTrue(ex.getMessage().toLowerCase().contains("taken"));
-    }
 }

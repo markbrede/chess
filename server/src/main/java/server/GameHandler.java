@@ -62,24 +62,20 @@ public class GameHandler {
         try {
             String authToken = req.headers("Authorization");
             if (authToken == null || authToken.isEmpty()) {
-                throw new UnauthorizedException("Error: unauthorized");
+                throw new DataAccessException("Error: unauthorized");
             }
 
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
-            if (request.gameID() == 0) {
+            if (request.gameID() == 0 || request.playerColor() == null) {
                 throw new DataAccessException("Error: bad request");
             }
 
-            //validate color. Don't validate for observer
-            if (request.playerColor() != null &&
-                !List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
+            if (!List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
                 throw new DataAccessException("Error: bad request");
             }
 
-            //valid for observer or valid player
             gameService.joinGame(authToken, request.gameID(), request.playerColor());
-
             res.status(200);
             return "{}";
         } catch (DataAccessException e) {
@@ -87,10 +83,9 @@ public class GameHandler {
         }
     }
 
-
     //updating exception handler cause of 400 instead of 500 err
     private Object handleException(DataAccessException e, Response res) {
-        //exception type check first
+        // Check exception type first
         if (e instanceof UnauthorizedException) {
             res.status(401);
         } else if (e.getMessage().equals("Error: bad request")) {
@@ -100,9 +95,6 @@ public class GameHandler {
         } else {
             res.status(500);
         }
-
-        //setting content type to ensure proper json parsing
-        res.type("application/json");
         return gson.toJson(Map.of("message", e.getMessage()));
     }
 }
