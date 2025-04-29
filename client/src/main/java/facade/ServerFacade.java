@@ -1,144 +1,102 @@
 package facade;
 
 import com.google.gson.Gson;
-import request.RegisterRequest;
-import response.RegisterResponse;
-import request.LoginRequest;
-import response.LoginResponse;
-import request.CreateGameRequest;
-import request.JoinGameRequest;
-import response.CreateGameResponse;
-import response.ListGamesResponse;
+import request.*;
+import response.*;
 
 import java.io.*;
 import java.net.*;
 import java.util.Map;
 
 public class ServerFacade {
+    private final String baseUrl;
 
-    private final String serverUrl;
-
-    public ServerFacade(String url) {
-        serverUrl = url;
+    public ServerFacade(int port) {
+        this.baseUrl = "http://localhost:" + port;
     }
 
-    //registration
     public RegisterResponse register(String username, String password, String email) throws Exception {
-        RegisterRequest req = new RegisterRequest(username, password, email);
-        var path = "/user";
-        return this.makeRequest("POST", path, req, RegisterResponse.class, null);
+        var req = new RegisterRequest(username, password, email);
+        return makeRequest("POST", "/user", req, RegisterResponse.class, null);
     }
 
-    //login
     public LoginResponse login(String username, String password) throws Exception {
-        LoginRequest req = new LoginRequest(username, password);
-        var path = "/session";
-        return this.makeRequest("POST", path, req, LoginResponse.class, null);
+        var req = new LoginRequest(username, password);
+        return makeRequest("POST", "/session", req, LoginResponse.class, null);
     }
 
-    //logout
     public void logout(String authToken) throws Exception {
-        var path = "/session";
-        this.makeRequest("DELETE", path, null, null, authToken);
+        makeRequest("DELETE", "/session", null, null, authToken);
     }
 
-    //list games
     public ListGamesResponse listGames(String authToken) throws Exception {
-        var path = "/game";
-        return this.makeRequest("GET", path, null, ListGamesResponse.class, authToken);
+        return makeRequest("GET", "/game", null, ListGamesResponse.class, authToken);
     }
 
-    //create game
     public CreateGameResponse createGame(String gameName, String authToken) throws Exception {
-        CreateGameRequest req = new CreateGameRequest(gameName);
-        var path = "/game";
-        return this.makeRequest("POST", path, req, CreateGameResponse.class, authToken);
+        var req = new CreateGameRequest(gameName);
+        return makeRequest("POST", "/game", req, CreateGameResponse.class, authToken);
     }
 
-    //join game
     public void joinGame(String playerColor, int gameID, String authToken) throws Exception {
-        JoinGameRequest req = new JoinGameRequest(playerColor, gameID);
-        var path = "/game";
-        this.makeRequest("PUT", path, req, null, authToken);
+        var req = new JoinGameRequest(playerColor, gameID);
+        makeRequest("PUT", "/game", req, null, authToken);
     }
 
-    //clear database... testing
     public void clearDatabase() throws Exception {
-        var path = "/db";
-        this.makeRequest("DELETE", path, null, null, null);
+        makeRequest("DELETE", "/db", null, null, null);
     }
 
-    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authtoken) throws Exception {
-        try {
-            URL url = (new URI(serverUrl + path)).toURL();
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            http.setRequestMethod(method);
-            http.setDoOutput(true);
+    private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws Exception {
+        URL url = (new URI(baseUrl + path)).toURL();
+        HttpURLConnection http = (HttpURLConnection) url.openConnection();
+        http.setRequestMethod(method);
+        http.setDoOutput(true);
 
-            if (authtoken != null) {
-                http.setRequestProperty("Authorization", authtoken);
-            }
-
-            writeBody(request, http);
-            http.connect();
-            throwIfNotSuccessful(http);
-            return readBody(http, responseClass);
-        } catch (Exception ex) {
-            throw ex;
+        if (authToken != null) {
+            http.setRequestProperty("Authorization", authToken);
         }
+
+        writeBody(request, http);
+        http.connect();
+        throwIfNotSuccessful(http);
+        return readBody(http, responseClass);
     }
 
     private static void writeBody(Object request, HttpURLConnection http) throws IOException {
         if (request != null) {
-            http.addRequestProperty("Content-Type", "application/json");
-            String reqData = new Gson().toJson(request);
-            try (OutputStream reqBody = http.getOutputStream()) {
-                reqBody.write(reqData.getBytes());
-            }
-        }
-    }
-
-    private void throwIfNotSuccessful(HttpURLConnection http) throws IOException, Exception {
-        var status = http.getResponseCode();
-        if (!isSuccessful(status)) {
-            String errorMessage = "";
-            try (InputStream respErr = http.getErrorStream()) {
-                if (respErr != null) {
-                    InputStreamReader reader = new InputStreamReader(respErr);
-                    var error = new Gson().fromJson(reader, Map.class);
-                    if (error != null && error.containsKey("message")) {
-                        errorMessage = (String) error.get("message");
-                    }
-                }
-            }
-
-            //meaningful error messages
-            if (status == 401) {
-                throw new Exception("unauthorized");
-            } else if (status == 400) {
-                throw new Exception("bad request");
-            } else if (!errorMessage.isEmpty()) {
-                throw new Exception(errorMessage);
-            } else {
-                throw new Exception("Error: " + status);
+            http.setRequestProperty("Content-Type", "application/json");
+            String json = new Gson().toJson(request);
+            try (OutputStream outputStream = http.getOutputStream()) {
+                outputStream.write(json.getBytes());
             }
         }
     }
 
     private static <T> T readBody(HttpURLConnection http, Class<T> responseClass) throws IOException {
-        T response = null;
-        if (http.getContentLength() < 0) {
+        if (http.getContentLength() < 0 && responseClass != null) {
             try (InputStream respBody = http.getInputStream()) {
                 InputStreamReader reader = new InputStreamReader(respBody);
-                if (responseClass != null) {
-                    response = new Gson().fromJson(reader, responseClass);
-                }
+                return new Gson().fromJson(reader, responseClass);
             }
         }
-        return response;
+        return null;
     }
 
-    private boolean isSuccessful(int status) {
-        return status / 100 == 2;
+    private void throwIfNotSuccessful(HttpURLConnection http) throws Exception {
+        int status = http.getResponseCode();
+        if (status / 100 != 2) {
+            String message = null;
+            try (InputStream err = http.getErrorStream()) {
+                if (err != null) {
+                    var error = new Gson().fromJson(new InputStreamReader(err), Map.class);
+                    message = (String) error.get("message");
+                }
+            }
+
+            if (status == 401) throw new Exception("unauthorized");
+            if (status == 400) throw new Exception("bad request");
+            throw new Exception(message != null ? message : "HTTP Error " + status);
+        }
     }
 }

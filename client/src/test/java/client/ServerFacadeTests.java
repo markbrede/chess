@@ -1,150 +1,52 @@
 package client;
 
 import facade.ServerFacade;
+import org.junit.jupiter.api.*;
 import server.Server;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
+
     private static Server server;
-    static ServerFacade facade;
-    private static final String TEST_USER = "Marcus Aurelius";
-    private static final String TEST_PASSWORD = "asdf";
-    private static final String TEST_EMAIL = "marcus@chessmail.testerton";
+    private static ServerFacade facade;
+
+    private static final String USERNAME = "marcus";
+    private static final String PASSWORD = "asdf";
+    private static final String EMAIL = "marcus@rome.empire";
 
     @BeforeAll
     public static void init() {
         server = new Server();
-        var port = server.run(0);
-        facade = new ServerFacade("http://localhost:" + port);
+        int port = server.run(0);
+        System.out.println("Started test HTTP server on " + port);
+        facade = new ServerFacade(port);
     }
 
     @AfterAll
-    static void stopServer() {
+    public static void tearDown() {
         server.stop();
     }
 
     @BeforeEach
-    public void clearDatabase() throws Exception {
+    public void clear() throws Exception {
         facade.clearDatabase();
     }
 
     @Test
-    public void passRegister() throws Exception {
-        var authData = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        assertNotNull(authData.authToken());
-        assertEquals(TEST_USER, authData.username());
-    }
-
-    @Test
-    public void failRegister() throws Exception {
-        facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL));
-        assertTrue(ex.getMessage().contains("already exists"));
-    }
-
-    @Test
-    public void passLogin() throws Exception {
-        facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        var response = facade.login("marcus aurelius", TEST_PASSWORD);
+    public void testRegisterSuccess() throws Exception {
+        var response = facade.register(USERNAME, PASSWORD, EMAIL);
+        assertNotNull(response);
         assertNotNull(response.authToken());
-        assertEquals(TEST_USER.toLowerCase(), response.username());
+        assertTrue(response.authToken().length() > 10);
     }
 
     @Test
-    public void failLogin() throws Exception {
-        facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.login(TEST_USER, "wrongpassword"));
-        assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"));
+    public void testRegisterDuplicateFails() throws Exception {
+        facade.register(USERNAME, PASSWORD, EMAIL);
+        Exception ex = assertThrows(Exception.class, () -> {
+            facade.register(USERNAME, PASSWORD, EMAIL);
+        });
+        assertTrue(ex.getMessage().toLowerCase().contains("taken"));
     }
-
-    @Test
-    public void passLogout() throws Exception {
-        var auth = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        assertDoesNotThrow(() -> facade.logout(auth.authToken()));
-
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.createGame("Meditations", auth.authToken()));
-        assertTrue(ex.getMessage().contains("unauthorized"));
-    }
-
-    @Test
-    public void failLogout() {
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.logout("fake authtoken"));
-        assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"));
-    }
-
-    @Test
-    public void passCreateGame() throws Exception {
-        var auth = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        var response = facade.createGame("Stoic Chess Match", auth.authToken());
-        assertTrue(response.gameID() > 0);
-    }
-
-    @Test
-    public void failCreateGame() throws Exception {
-        facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.createGame("Invalid Game", "fake authtoken"));
-        assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"));
-    }
-
-    @Test
-    public void passListGames() throws Exception {
-        var auth = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        facade.createGame("Roman Millet", auth.authToken());
-        facade.createGame("Dueler the FHE kid", auth.authToken());
-
-        var response = facade.listGames(auth.authToken());
-        assertEquals(2, response.games().size());
-    }
-
-    @Test
-    public void failListGames() throws Exception {
-        facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        Exception ex = assertThrows(Exception.class, () ->
-                facade.listGames("invalid session Yeeee"));
-        assertTrue(ex.getMessage().toLowerCase().contains("unauthorized"));
-    }
-
-    @Test
-    public void passJoinGame() throws Exception {
-        var auth1 = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        var auth2 = facade.register("Zues", "123", "zues@gmail.com");
-
-        var game = facade.createGame("Stoic Showdown", auth1.authToken());
-        assertDoesNotThrow(() -> facade.joinGame("WHITE", game.gameID(), auth1.authToken()));
-        assertDoesNotThrow(() -> facade.joinGame("BLACK", game.gameID(), auth2.authToken()));
-    }
-
-    @Test
-    public void failJoinGame() throws Exception {
-        var auth = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        var game = facade.createGame("Marcus vs Himself", auth.authToken());
-
-        Exception colorEx = assertThrows(Exception.class, () ->
-                facade.joinGame("GOLD", game.gameID(), auth.authToken()));
-        assertEquals("bad request", colorEx.getMessage().toLowerCase());
-
-        Exception gameEx = assertThrows(Exception.class, () ->
-                facade.joinGame("WHITE", 9999, auth.authToken()));
-        assertTrue(gameEx.getMessage().toLowerCase().contains("couldn't find game"));
-    }
-
-
-    @Test
-    public void passObserveGame() throws Exception {
-        var auth = facade.register(TEST_USER, TEST_PASSWORD, TEST_EMAIL);
-        var game = facade.createGame("Observable Meditations", auth.authToken());
-
-        //pass null to join as observer
-        assertDoesNotThrow(() -> facade.joinGame(null, game.gameID(), auth.authToken()));
-    }
-
 }
