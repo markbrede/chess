@@ -20,22 +20,22 @@ public class PreloginUI extends UI {
         displayHelp();
 
         while (running) {
-            String command = promptUser("\nEnter command: ").toLowerCase();
+            String command = promptUser("\nPlease enter a command: ").toLowerCase();
             processCommand(command);
         }
     }
 
     private void displayWelcomeMessage() {
         System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-        displayMessage("\n♕ Welcome to Chess! ♕");
+        displayMessage("\n♕ HELLO, AND WELCOME TO CHESS! ♕\nReady to make your next brilliant move?");
     }
 
     private void displayHelp() {
-        displayMessage("\nAvailable commands:");
-        displayMessage("  help - Display available commands");
-        displayMessage("  quit - Exit the program");
-        displayMessage("  login - Log in to an existing account");
-        displayMessage("  register - Create a new account");
+        displayMessage("\nYOUR AVAILABLE COMMANDS ARE...");
+        displayMessage("  help - to display available commands");
+        displayMessage("  quit - to exit the chess program");
+        displayMessage("  login - to log in to an existing account");
+        displayMessage("  register - to create a new account");
     }
 
     private void processCommand(String command) {
@@ -53,13 +53,13 @@ public class PreloginUI extends UI {
                 register();
                 break;
             default:
-                displayErrorMessage("Unknown command. Type 'help' for a list of commands.");
+                displayErrorMessage("Hmm, that was an unknown command. Please type 'help' for a list of valid commands.");
                 break;
         }
     }
 
     private void quit() {
-        displayMessage("Goodbye!");
+        displayMessage("Thanks for stopping by. Good day to you!");
         running = false;
     }
 
@@ -88,7 +88,7 @@ public class PreloginUI extends UI {
             }
 
         } catch (Exception e) {
-            displayErrorMessage("Login failed: " + e.getMessage());
+            displayErrorMessage("Login failed. Please ensure credentials were entered correctly.");
         }
     }
 

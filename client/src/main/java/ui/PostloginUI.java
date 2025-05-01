@@ -39,17 +39,17 @@ public class PostloginUI extends UI {
 
 
     private void displayWelcomeMessage() {
-        displayMessage("\nLogged in as: " + username);
+        displayMessage("\nLOGGED IN AS: " + username);
     }
 
     private void displayHelp() {
         displayMessage("\nAvailable commands:");
-        displayMessage("  help - Display available commands");
-        displayMessage("  logout - Log out of the current account");
-        displayMessage("  create - Create a new game");
-        displayMessage("  list - List all available games");
-        displayMessage("  join - Join a game as a player");
-        displayMessage("  observe - Join a game as an observer");
+        displayMessage("  help - to display available commands");
+        displayMessage("  logout - to log out of the current account");
+        displayMessage("  create - to create a new game");
+        displayMessage("  list - to list all available games");
+        displayMessage("  join - to join a game as a player");
+        displayMessage("  observe - to join a game as an observer");
     }
 
     private void processCommand(String command) {
@@ -73,7 +73,7 @@ public class PostloginUI extends UI {
                 observeGame();
                 break;
             default:
-                displayErrorMessage("Unknown command. Type 'help' for a list of commands.");
+                displayErrorMessage("Hmm, that was an unknown command. Please type 'help' for a list of valid commands.");
                 break;
         }
     }
@@ -81,15 +81,15 @@ public class PostloginUI extends UI {
     private void logout() {
         try {
             facade.logout(authToken);
-            displayMessage("Logout successful.");
+            displayMessage("You have logged out successfully.");
             running = false;
         } catch (Exception e) {
-            displayErrorMessage("Logout failed: " + e.getMessage());
+            displayErrorMessage("Logout failed due to a " + e.getMessage());
         }
     }
 
     private void createGame() {
-        String gameName = promptUser("Game name: ");
+        String gameName = promptUser("Please enter a name for your chess game: ");
 
         if (gameName == null || gameName.trim().isEmpty()) {
             displayErrorMessage("Game name can't be empty.");
@@ -101,7 +101,7 @@ public class PostloginUI extends UI {
 
         try {
             CreateGameResponse response = facade.createGame(adjGameName, authToken);
-            displayMessage("Game created successfully with ID: " + response.gameID());
+            displayMessage("Game created successfully with game ID number: " + response.gameID());
         } catch (Exception e) {
             displayErrorMessage("Failed to create game: " + e.getMessage());
         }
@@ -136,11 +136,11 @@ public class PostloginUI extends UI {
         }
 
         try {
-            String gameNumberStr = promptUser("Game number: ");
+            String gameNumberStr = promptUser("Please enter the game ID number: ");
             int gameNumber = Integer.parseInt(gameNumberStr);
 
             if (gameNumber < 1 || gameNumber > gamesList.size()) {
-                displayErrorMessage("Invalid game number.");
+                displayErrorMessage("invalid game ID number.");
                 return;
             }
 
@@ -178,22 +178,22 @@ public class PostloginUI extends UI {
         } catch (NumberFormatException e) {
             displayErrorMessage("Invalid format for game number");
         } catch (Exception e) {
-            displayErrorMessage("Could not join game: " + e.getMessage());
+            displayErrorMessage("Could not join game. There was a " + e.getMessage());
         }
     }
 
     private void observeGame() {
         if (gamesList.isEmpty()) {
-            displayMessage("No games are available. Use the 'list' command to refresh the games list.");
+            displayMessage("No games are available. Enter 'list' to refresh the games list.");
             return;
         }
 
         try {
-            String gameNumberStr = promptUser("Game number: ");
+            String gameNumberStr = promptUser("Please enter the game ID number: ");
             int gameNumber = Integer.parseInt(gameNumberStr);
 
             if (gameNumber < 1 || gameNumber > gamesList.size()) {
-                displayErrorMessage("Invalid game number.");
+                displayErrorMessage("Invalid game ID number.");
                 return;
             }
 
@@ -218,9 +218,9 @@ public class PostloginUI extends UI {
             promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
 
         } catch (NumberFormatException e) {
-            displayErrorMessage("Invalid format for game number");
+            displayErrorMessage("Invalid format for game ID number");
         } catch (Exception e) {
-            displayErrorMessage("Could not observe game: " + e.getMessage());
+            displayErrorMessage("Could not observe game. There was a " + e.getMessage());
         }
     }
 }
