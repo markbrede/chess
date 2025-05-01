@@ -28,7 +28,7 @@ public class PostloginUI extends UI {
     public void run() {
         clearScreen();
         System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
-        displayMessage("\n♛ Welcome, " + username + "!");
+        displayWelcomeMessage();  // replace custom welcome message
         displayHelp();
 
         while (running) {
@@ -36,6 +36,7 @@ public class PostloginUI extends UI {
             processCommand(command);
         }
     }
+
 
     private void displayWelcomeMessage() {
         displayMessage("\nLogged in as: " + username);
@@ -95,8 +96,11 @@ public class PostloginUI extends UI {
             return;
         }
 
+        //prevent duplicate games through case differences
+        String adjGameName = gameName.trim().toLowerCase(); //trim whitespace and convert to lowercase
+
         try {
-            CreateGameResponse response = facade.createGame(gameName, authToken);
+            CreateGameResponse response = facade.createGame(adjGameName, authToken);
             displayMessage("Game created successfully with ID: " + response.gameID());
         } catch (Exception e) {
             displayErrorMessage("Failed to create game: " + e.getMessage());
