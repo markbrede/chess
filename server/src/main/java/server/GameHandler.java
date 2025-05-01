@@ -67,15 +67,16 @@ public class GameHandler {
 
             JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
 
-            if (request.gameID() == 0 || request.playerColor() == null) {
+            if (request.gameID() == 0) {
                 throw new DataAccessException("Error: bad request");
             }
 
-            if (!List.of("WHITE", "BLACK").contains(request.playerColor().toUpperCase())) {
+            String color = request.playerColor();
+            if (color != null && !List.of("WHITE", "BLACK").contains(color.toUpperCase())) {
                 throw new DataAccessException("Error: bad request");
             }
 
-            gameService.joinGame(authToken, request.gameID(), request.playerColor());
+            gameService.joinGame(authToken, request.gameID(), color);
             res.status(200);
             return "{}";
         } catch (DataAccessException e) {

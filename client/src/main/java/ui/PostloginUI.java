@@ -198,22 +198,22 @@ public class PostloginUI extends UI {
             }
 
             GameData selectedGame = gamesList.get(gameNumber - 1);
+            int gameID = selectedGame.gameID();
 
             if (selectedGame.game() == null) {
                 displayErrorMessage("The board could not be generated due to no available game data.");
                 return;
             }
 
-            int gameID = selectedGame.gameID();
-
             //joining a game as an observer
             facade.joinGame(null, gameID, authToken);
+            GameData updatedGame = facade.getGame(gameID, authToken);  // Fixed variable name
 
             displayMessage("You've joined the game as an observer.");
 
-            //draw board from white sides view
             ChessBoardUI chessboardUI = new ChessBoardUI();
-            chessboardUI.drawBoard(true, selectedGame.game());
+            chessboardUI.drawBoard(true, updatedGame.game());  // Now using fresh data
+
 
             promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
 

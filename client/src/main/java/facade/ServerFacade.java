@@ -3,6 +3,7 @@ package facade;
 import com.google.gson.Gson;
 import request.*;
 import response.*;
+import model.GameData;
 
 import java.io.*;
 import java.net.*;
@@ -45,6 +46,11 @@ public class ServerFacade {
 
     public void clearDatabase() throws Exception {
         makeRequest("DELETE", "/db", null, null, null);
+    }
+
+    //get latest game state
+    public GameData getGame(int gameID, String authToken) throws Exception {
+        return makeRequest("GET", "/game/" + gameID, null, GameData.class, authToken);
     }
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws Exception {
