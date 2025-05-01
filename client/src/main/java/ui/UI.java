@@ -2,6 +2,7 @@ package ui;
 
 import java.util.Scanner;
 
+//UI is for common functionality needed in prelog and postlog
 public abstract class UI {
     protected Scanner scanner;
 
