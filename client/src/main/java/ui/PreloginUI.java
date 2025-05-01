@@ -106,7 +106,6 @@ public class PreloginUI extends UI {
             RegisterResponse response = facade.register(username, password, email);
             displayMessage("Registration successful! Welcome, " + response.username() + "!");
 
-            // will transition to PostloginUI. I haven't implemented it yet
             PostloginUI postloginUI = new PostloginUI(facade, response.authToken(), response.username());
             postloginUI.run();
 
