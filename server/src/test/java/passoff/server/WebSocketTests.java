@@ -12,6 +12,8 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static websocket.messages.ServerMessage.ServerMessageType.*;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class WebSocketTests {
     private static WebsocketTestingEnvironment environment;
@@ -36,7 +38,7 @@ public class WebSocketTests {
 
         serverFacade = new TestServerFacade("localhost", port);
         serverFacade.clear();
-        environment = new WebsocketTestingEnvironment("localhost", port, "/ws", passoff.server.TestFactory.getGsonBuilder());
+        environment = new WebsocketTestingEnvironment("localhost", port, "/ws", TestFactory.getGsonBuilder());
         waitTime = TestFactory.getMessageTime();
     }
 

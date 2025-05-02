@@ -4,6 +4,7 @@ import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.GameData;
+import model.AuthData;
 import request.CreateGameRequest;
 
 import java.util.List;
@@ -36,6 +37,10 @@ public class GameService {
     public void updateGame(String authToken, GameData updatedGame) throws DataAccessException {
         authDAO.getAuth(authToken);
         gameDAO.updateGame(updatedGame);
+    }
+
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        return authDAO.getAuth(authToken);
     }
 
     public void clear(){
