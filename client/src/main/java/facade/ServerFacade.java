@@ -1,5 +1,6 @@
 package facade;
 
+import chess.ChessMove;
 import com.google.gson.Gson;
 import request.*;
 import response.*;
@@ -38,10 +39,19 @@ public class ServerFacade {
         var req = new CreateGameRequest(gameName);
         return makeRequest("POST", "/game", req, CreateGameResponse.class, authToken);
     }
+    //helper to really test observer. I'm reallll tired of its issues lol.
+    public void makeMove(int gameID, ChessMove move, String authToken) throws Exception {
+        makeRequest("POST", "/game/" + gameID + "/move", move, null, authToken);
+    }
 
     public void joinGame(String playerColor, int gameID, String authToken) throws Exception {
-        var req = new JoinGameRequest(playerColor, gameID);
-        makeRequest("PUT", "/game", req, null, authToken);
+        if (playerColor == null || playerColor.isBlank()) {
+            //I'm routing observers using a separate endpoint to prevent the unexpected 200 api error
+            makeRequest("PUT", "/game/observe/" + gameID, null, null, authToken);
+        } else {
+            var req = new JoinGameRequest(playerColor, gameID);
+            makeRequest("PUT", "/game", req, null, authToken);
+        }
     }
 
     public void clearDatabase() throws Exception {

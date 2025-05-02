@@ -185,6 +185,46 @@ public class ServerFacadeTests {
                 facade.joinGame(null, game.gameID(), loginRes.authToken()));
     }
 
+    //attempt to make a move as an observer
+    @Test
+    public void testObserverCannotMakeMove() throws Exception {
+        facade.register(USERNAME, PASSWORD, EMAIL);
+        var loginRes = facade.login(USERNAME, PASSWORD);
+        var game = facade.createGame("testGame", loginRes.authToken());
+
+        facade.joinGame(null, game.gameID(), loginRes.authToken());
+
+
+        var from = new chess.ChessPosition(2, 1); // b2
+        var to = new chess.ChessPosition(3, 1);   // b3
+        var move = new chess.ChessMove(from, to, null);
+
+        assertThrows(Exception.class, () ->
+                facade.makeMove(game.gameID(), move, loginRes.authToken()));
+    }
+
+    @Test
+    public void testMultipleObserversCanJoin() throws Exception {
+        var user1 = facade.register("observer1", "pass", "o1@mail.com");
+        var user2 = facade.register("observer2", "pass", "o2@mail.com");
+
+        var game = facade.createGame("watchable", user1.authToken());
+
+        assertDoesNotThrow(() ->
+                facade.joinGame(null, game.gameID(), user1.authToken()));
+
+        assertDoesNotThrow(() ->
+                facade.joinGame(null, game.gameID(), user2.authToken()));
+    }
+
+    @Test
+    public void testObserverCannotJoinInvalidGame() throws Exception {
+        var user = facade.register(USERNAME, PASSWORD, EMAIL);
+
+        assertThrows(Exception.class, () ->
+                facade.joinGame(null, 99999, user.authToken())); // invalid game ID
+    }
+
     @Test
     public void testExpiredToken() throws Exception {
         var regRes = facade.register(USERNAME, PASSWORD, EMAIL);

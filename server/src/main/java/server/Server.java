@@ -45,6 +45,7 @@ public class Server {
         Spark.get("/game", gameHandler::listGames);
         Spark.post("/game", gameHandler::createGame);
         Spark.put("/game", gameHandler::joinGame);
+        Spark.put("/game/observe/:gameID", gameHandler::observeGame);//needed separate route
         Spark.delete("/db", this::clear); //db route to clear method
 
         Spark.exception(UnauthorizedException.class, (e, req, res) -> {

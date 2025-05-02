@@ -98,4 +98,20 @@ public class GameHandler {
         }
         return gson.toJson(Map.of("message", e.getMessage()));
     }
+
+    public Object observeGame(Request req, Response res) {
+        try {
+            String authToken = req.headers("Authorization");
+            int gameID = Integer.parseInt(req.params(":gameID"));
+
+            gameService.observeGame(authToken, gameID);
+
+            res.status(200);
+            return "{}";
+        } catch (Exception e) {
+            res.status(400);
+            return Map.of("message", e.getMessage());
+        }
+    }
+
 }

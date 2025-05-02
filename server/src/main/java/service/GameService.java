@@ -87,6 +87,16 @@ public class GameService {
         gameDAO.updateGame(updatedGame);
     }
 
+    public void observeGame(String authToken, int gameID) throws DataAccessException {
+        var auth = authDAO.getAuth(authToken);
+        var game = gameDAO.getGame(gameID);
+
+        if (auth == null || game == null) {
+            throw new DataAccessException("Error: unauthorized or game not found");
+        }
+
+    }
+
     public GameData makeMove(String authToken, int gameId, ChessMove move) throws DataAccessException, InvalidMoveException {
         AuthData auth = getAuth(authToken);
         GameData game = getGame(gameId); //get current game
