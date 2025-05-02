@@ -124,7 +124,32 @@ public class WebSocketHandler {
     }
 
     private void handleMakeMove(Session session, UserGameCommand command) {
+        try {
+            String authToken = command.getAuthToken();
+            Integer gameId = command.getGameID();
+            ChessMove move = command.getMove();
+            String username = sessionToUser.get(session);
 
+            GameData game = gameService.makeMove(authToken, gameId, move);
+
+            for (Session s : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
+                sendGameState(s, game);
+                if (!s.equals(session)) {
+                    sendNotification(s, username + " made a move: " + move.toString());
+                }
+            }
+
+            if (game.getGame().getGameOver()) {
+                for (Session s : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
+                    sendNotification(s, "Game over!");
+                }
+                gameInProgress.put(gameId, false);
+            }
+        } catch (InvalidMoveException e) {
+            sendError(session, "Invalid move: " + e.getMessage());
+        } catch (Exception e) {
+            sendError(session, "Error making move: " + e.getMessage());
+        }
     }
 
     private void handleLeave(Session session, UserGameCommand command) {
