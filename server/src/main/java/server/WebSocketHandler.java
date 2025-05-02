@@ -10,8 +10,12 @@ import model.GameData;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import service.GameService;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 
 import java.io.IOException;
 import java.util.Map;
@@ -65,10 +69,19 @@ public class WebSocketHandler {
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
         try {
-            //pars jsn message into a user game comm object
-            UserGameCommand command = gson.fromJson(message, UserGameCommand.class);
+            JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+            UserGameCommand.CommandType type = gson.fromJson(json.get("commandType"), UserGameCommand.CommandType.class);
 
-            //based on comm type
+            UserGameCommand command;
+            switch (type) {
+                case MAKE_MOVE:
+                    command = gson.fromJson(message, MakeMoveCommand.class);
+                    break;
+                default:
+                    command = gson.fromJson(message, UserGameCommand.class);
+                    break;
+            }
+
             switch (command.getCommandType()) {
                 case CONNECT:
                     handleConnect(session, command);
@@ -127,7 +140,12 @@ public class WebSocketHandler {
         try {
             String authToken = command.getAuthToken();
             Integer gameId = command.getGameID();
-            ChessMove move = command.getMove();
+            if (!(command instanceof MakeMoveCommand)) {
+                sendError(session, "Invalid move command format.");
+                return;
+            }
+            ChessMove move = ((MakeMoveCommand) command).getMove();
+
             String username = sessionToUser.get(session);
 
             GameData game = gameService.makeMove(authToken, gameId, move);
@@ -139,7 +157,7 @@ public class WebSocketHandler {
                 }
             }
 
-            if (game.getGame().getGameOver()) {
+            if (isGameOver(game.game())) {
                 for (Session s : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
                     sendNotification(s, "Game over!");
                 }
@@ -196,13 +214,6 @@ public class WebSocketHandler {
     }
 
     //helper methods
-
-    private ChessMove extractMoveFromCommand(UserGameCommand command) {
-        //this method would parse move data from the command
-        //really depends on how moves are represented in my commands
-        return null; // Placeholder
-    }
-
     private boolean isGameOver(ChessGame game) {
         //checkmate or stalemate check
         return game.isInCheckmate(ChessGame.TeamColor.WHITE) ||

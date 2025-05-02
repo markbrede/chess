@@ -1,5 +1,7 @@
 package service;
 
+import chess.ChessMove;
+import chess.InvalidMoveException;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
@@ -85,4 +87,25 @@ public class GameService {
             gameDAO.updateGame(updatedGame);
         }
     }
+    public GameData makeMove(String authToken, int gameId, ChessMove move) throws DataAccessException, InvalidMoveException {
+        AuthData auth = getAuth(authToken);
+        GameData game = getGame(gameId); //get current game
+
+        game.game().makeMove(move); //apply the move
+
+        //record immutable. save and make new one
+        GameData updatedGame = new GameData(
+                game.gameID(),
+                game.whiteUsername(),
+                game.blackUsername(),
+                game.gameName(),
+                game.game()
+        );
+
+        updateGame(authToken, updatedGame);  //save to db
+
+        return updatedGame;
+    }
+
+
 }
