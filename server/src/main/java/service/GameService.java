@@ -50,43 +50,43 @@ public class GameService {
     }
 
     public void joinGame(String authToken, int gameID, String playerColor) throws DataAccessException {
-        var auth = authDAO.getAuth(authToken);//validate auth token
+        var auth = authDAO.getAuth(authToken);  // val auth tok
+        GameData game = gameDAO.getGame(gameID);  // val game exist
 
-        GameData game = gameDAO.getGame(gameID);//check if it exists
-
-        //team color availability
-        if (playerColor != null) {
-            if (!List.of("WHITE", "BLACK").contains(playerColor.toUpperCase())) {
-                throw new DataAccessException("Error: bad request"); //invalid color
-            }
-            if (("WHITE".equalsIgnoreCase(playerColor) && game.whiteUsername() != null) ||
-                    ("BLACK".equalsIgnoreCase(playerColor) && game.blackUsername() != null)) {
-                throw new DataAccessException("Error: already taken");
-            }
-
-            //the updated data
-            GameData updatedGame;
-            if ("WHITE".equalsIgnoreCase(playerColor)) {
-                updatedGame = new GameData(
-                        game.gameID(),
-                        auth.username(),
-                        game.blackUsername(),
-                        game.gameName(),
-                        game.game()
-                );
-            } else {
-                updatedGame = new GameData(
-                        game.gameID(),
-                        game.whiteUsername(),
-                        auth.username(),
-                        game.gameName(),
-                        game.game()
-                );
-            }
-
-            gameDAO.updateGame(updatedGame);
+        //val color
+        if (playerColor == null || !List.of("WHITE", "BLACK").contains(playerColor.toUpperCase())) {
+            throw new DataAccessException("Error: bad request");
         }
+
+        //val color avail
+        if (("WHITE".equalsIgnoreCase(playerColor) && game.whiteUsername() != null) ||
+            ("BLACK".equalsIgnoreCase(playerColor) && game.blackUsername() != null)) {
+            throw new DataAccessException("Error: already taken");
+        }
+
+        //user to team color
+        GameData updatedGame;
+        if ("WHITE".equalsIgnoreCase(playerColor)) {
+            updatedGame = new GameData(
+                    game.gameID(),
+                    auth.username(),
+                    game.blackUsername(),
+                    game.gameName(),
+                    game.game()
+            );
+        } else {
+            updatedGame = new GameData(
+                    game.gameID(),
+                    game.whiteUsername(),
+                    auth.username(),
+                    game.gameName(),
+                    game.game()
+            );
+        }
+
+        gameDAO.updateGame(updatedGame);
     }
+
     public GameData makeMove(String authToken, int gameId, ChessMove move) throws DataAccessException, InvalidMoveException {
         AuthData auth = getAuth(authToken);
         GameData game = getGame(gameId); //get current game
