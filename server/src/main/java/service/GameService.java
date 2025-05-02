@@ -107,5 +107,23 @@ public class GameService {
         return updatedGame;
     }
 
+    //I will enhance with resignation logic later
+    public GameData resignGame(String authToken, int gameId) throws DataAccessException {
+        AuthData auth = getAuth(authToken);
+        GameData game = getGame(gameId);
+
+        //for now just mark game as updated to trigger repull of game state
+        GameData updatedGame = new GameData(
+                game.gameID(),
+                game.whiteUsername(),
+                game.blackUsername(),
+                game.gameName(),
+                game.game() //same state until I complete
+        );
+
+        updateGame(authToken, updatedGame);
+        return updatedGame;
+    }
+
 
 }

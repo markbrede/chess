@@ -12,6 +12,9 @@ import org.eclipse.jetty.websocket.api.annotations.*;
 import service.GameService;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -147,6 +150,10 @@ public class WebSocketHandler {
             ChessMove move = ((MakeMoveCommand) command).getMove();
 
             String username = sessionToUser.get(session);
+            if (username == null) {
+                sendError(session, "User not recognized for this session.");
+                return;
+            }
 
             GameData game = gameService.makeMove(authToken, gameId, move);
 
@@ -196,11 +203,16 @@ public class WebSocketHandler {
             String authToken = command.getAuthToken();
             Integer gameId = command.getGameID();
             String username = sessionToUser.get(session);
+            if (username == null) {
+                sendError(session, "User not recognized for this session.");
+                return;
+            }
 
             gameInProgress.put(gameId, false); //game marked as over
 
             //reflect resignation
-            //GameData updatedGame = gameService.resignGame(authToken, gameId);
+            GameData updatedGame = gameService.resignGame(authToken, gameId);
+            notifyAllPlayers(gameId, updatedGame, session, "resigned from the game");
 
             Set<Session> gameSessions = gameToSessions.get(gameId);
             if (gameSessions != null) {
@@ -268,20 +280,17 @@ public class WebSocketHandler {
         }
     }
 
-    //holding off on message creation methods since I will need to create them based on server message structure
-
+    //message creation methods
     private ServerMessage createLoadGameMessage(GameData game) {
-        //game data mess
-        return null;
+        return new LoadGameMessage(game);
     }
 
     private ServerMessage createNotificationMessage(String message) {
-        //notification type message
-        return null;
+        return new NotificationMessage(message);
     }
 
     private ServerMessage createErrorMessage(String errorMessage) {
-        //err type message
-        return null;
+        return new ErrorMessage(errorMessage);
     }
+
 }
