@@ -143,6 +143,12 @@ public class WebSocketHandler {
         try {
             String authToken = command.getAuthToken();
             Integer gameId = command.getGameID();
+            //fix moving after resign issue
+            if (gameInProgress.getOrDefault(gameId, true) == false) {
+                sendError(session, "The game is now over. No more moves are allowed.");
+                return;
+            }
+
             if (!(command instanceof MakeMoveCommand)) {
                 sendError(session, "Invalid move command format.");
                 return;
