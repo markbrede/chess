@@ -112,18 +112,22 @@ public class GameService {
         AuthData auth = getAuth(authToken);
         GameData game = getGame(gameId);
 
-        //for now just mark game as updated to trigger repull of game state
+        if (!auth.username().equals(game.whiteUsername()) &&
+            !auth.username().equals(game.blackUsername())) {
+            throw new DataAccessException("You are not a player in this game.");
+        }
+
+        //mark game as updated
         GameData updatedGame = new GameData(
                 game.gameID(),
                 game.whiteUsername(),
                 game.blackUsername(),
                 game.gameName(),
-                game.game() //same state until I complete
+                game.game()
         );
 
         updateGame(authToken, updatedGame);
         return updatedGame;
     }
-
 
 }
