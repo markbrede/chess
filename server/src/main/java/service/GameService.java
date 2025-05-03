@@ -140,4 +140,10 @@ public class GameService {
         return updatedGame;
     }
 
+    public String getUsernameFromAuth(String authToken) throws DataAccessException {
+        AuthData authData = authDAO.getAuth(authToken);
+        return authData.username();
+    }
+
+
 }

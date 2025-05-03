@@ -11,6 +11,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import service.GameService;
 import websocket.commands.MakeMoveCommand;
+import websocket.commands.ObserveGameCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -18,7 +19,6 @@ import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 
 import java.io.IOException;
 import java.util.Map;
@@ -40,6 +40,7 @@ public class WebSocketHandler {
     private final Map<Session, String> sessionToUser = new ConcurrentHashMap<>();
     private final Map<Integer, Set<Session>> gameToSessions = new ConcurrentHashMap<>();
     private final Map<Integer, Boolean> gameInProgress = new ConcurrentHashMap<>();
+    private final Map<Integer, Set<Session>> gameToObservers = new ConcurrentHashMap<>();
 
     public WebSocketHandler(GameService gameService) {
         this.gameService = gameService;
@@ -67,6 +68,12 @@ public class WebSocketHandler {
                 }
             }
         }
+
+        for (Map.Entry<Integer, Set<Session>> entry : gameToObservers.entrySet()) {
+            Integer gameId = entry.getKey();
+            Set<Session> observerSessions = entry.getValue();
+            observerSessions.remove(session);
+        }
     }
 
     @OnWebSocketMessage
@@ -80,6 +87,10 @@ public class WebSocketHandler {
                 case MAKE_MOVE:
                     command = gson.fromJson(message, MakeMoveCommand.class);
                     break;
+                case OBSERVE:
+                    ObserveGameCommand observeCommand = gson.fromJson(message, ObserveGameCommand.class);
+                    handleObserveGame(session, observeCommand);
+                    return;
                 default:
                     command = gson.fromJson(message, UserGameCommand.class);
                     break;
@@ -125,7 +136,6 @@ public class WebSocketHandler {
             sessionToUser.put(session, authData.username());
             gameToSessions.computeIfAbsent(gameId, k -> new HashSet<>()).add(session);
 
-
             sendGameState(session, game); //send game state to client
 
             //let others know what's going on
@@ -139,13 +149,39 @@ public class WebSocketHandler {
         }
     }
 
+    private void handleObserveGame(Session session, ObserveGameCommand command) {
+        try {
+            int gameID = command.getGameID();
+            String authToken = command.getAuthToken();
+            String username = gameService.getUsernameFromAuth(authToken);
+
+            GameData game = gameService.getGame(gameID);
+            if (game == null) {
+                sendError(session, "Game doesn't exist.");
+                return;
+            }
+
+            sessionToUser.put(session, username);
+            gameToObservers.putIfAbsent(gameID, ConcurrentHashMap.newKeySet());
+            gameToObservers.get(gameID).add(session);
+
+            LoadGameMessage message = new LoadGameMessage(game.game(), null);
+
+            session.getRemote().sendString(gson.toJson(message));
+
+            broadcastToPlayersAndObservers(gameID, new NotificationMessage(username + " is observing the game."));
+        } catch (Exception e) {
+            sendError(session, "Error observing game: " + e.getMessage());
+        }
+    }
+
     private void handleMakeMove(Session session, UserGameCommand command) {
         try {
             String authToken = command.getAuthToken();
             Integer gameId = command.getGameID();
-            //fix moving after resign issue
+
             if (gameInProgress.getOrDefault(gameId, true) == false) {
-                sendError(session, "The game is now over. No more moves are allowed.");
+                sendError(session, "The game is now over. No more moves are allowed naughty!.");
                 return;
             }
 
@@ -157,7 +193,7 @@ public class WebSocketHandler {
 
             String username = sessionToUser.get(session);
             if (username == null) {
-                sendError(session, "User not recognized for this session.");
+                sendError(session, "User not recognized for this sesh.");
                 return;
             }
 
@@ -168,6 +204,11 @@ public class WebSocketHandler {
                 if (!s.equals(session)) {
                     sendNotification(s, username + " made a move: " + move.toString());
                 }
+            }
+
+            for (Session observer : gameToObservers.getOrDefault(gameId, Set.of())) {
+                sendGameState(observer, game);
+                sendNotification(observer, username + " made a move: " + move.toString());
             }
 
             if (isGameOver(game.game())) {
@@ -188,12 +229,9 @@ public class WebSocketHandler {
             Integer gameId = command.getGameID();
             String username = sessionToUser.get(session);
 
-
             Set<Session> gameSessions = gameToSessions.get(gameId);
             if (gameSessions != null) {
-                gameSessions.remove(session); //rmv sesh from game
-
-                //let others know what's going on
+                gameSessions.remove(session);
                 for (Session otherSession : gameSessions) {
                     sendNotification(otherSession, username + " has left the game");
                 }
@@ -203,7 +241,6 @@ public class WebSocketHandler {
         }
     }
 
-    //need to add resignGame in gameservice for method to be usable
     private void handleResign(Session session, UserGameCommand command) {
         try {
             String authToken = command.getAuthToken();
@@ -214,9 +251,8 @@ public class WebSocketHandler {
                 return;
             }
 
-            gameInProgress.put(gameId, false); //game marked as over
+            gameInProgress.put(gameId, false);
 
-            //reflect resignation
             GameData updatedGame = gameService.resignGame(authToken, gameId);
             notifyAllPlayers(gameId, updatedGame, session, "resigned from the game");
 
@@ -231,9 +267,7 @@ public class WebSocketHandler {
         }
     }
 
-    //helper methods
     private boolean isGameOver(ChessGame game) {
-        //checkmate or stalemate check
         return game.isInCheckmate(ChessGame.TeamColor.WHITE) ||
                game.isInCheckmate(ChessGame.TeamColor.BLACK) ||
                game.isInStalemate(ChessGame.TeamColor.WHITE) ||
@@ -244,10 +278,7 @@ public class WebSocketHandler {
         Set<Session> gameSessions = gameToSessions.get(gameId);
         if (gameSessions != null) {
             for (Session playerSession : gameSessions) {
-                //update players with game st
                 sendGameState(playerSession, game);
-
-                //let 'em know what's goin on
                 if (!playerSession.equals(sourceSession)) {
                     String username = sessionToUser.get(sourceSession);
                     sendNotification(playerSession, username + " " + action);
@@ -256,10 +287,30 @@ public class WebSocketHandler {
         }
     }
 
+    private void broadcastToPlayersAndObservers(int gameID, ServerMessage message) {
+        Set<Session> players = gameToSessions.getOrDefault(gameID, Set.of());
+        Set<Session> observers = gameToObservers.getOrDefault(gameID, Set.of());
+
+        for (Session session : players) {
+            try {
+                session.getRemote().sendString(gson.toJson(message));
+            } catch (IOException e) {
+                System.err.println("Failed nroadcast to player: " + e.getMessage());
+            }
+        }
+
+        for (Session session : observers) {
+            try {
+                session.getRemote().sendString(gson.toJson(message));
+            } catch (IOException e) {
+                System.err.println("Failed broadcast to observer: " + e.getMessage());
+            }
+        }
+    }
+
     private void sendGameState(Session session, GameData game) {
         try {
             ServerMessage message = createLoadGameMessage(game);
-
             session.getRemote().sendString(gson.toJson(message));
         } catch (IOException e) {
             System.err.println("Error sending game state: " + e.getMessage());
@@ -269,26 +320,23 @@ public class WebSocketHandler {
     private void sendNotification(Session session, String notificationText) {
         try {
             ServerMessage message = createNotificationMessage(notificationText);
-
             session.getRemote().sendString(gson.toJson(message));
         } catch (IOException e) {
-            System.err.println("Error sending notification: " + e.getMessage());
+            System.err.println("Erorr sending notification: " + e.getMessage());
         }
     }
 
     private void sendError(Session session, String errorMessage) {
         try {
             ServerMessage message = createErrorMessage(errorMessage);
-
             session.getRemote().sendString(gson.toJson(message));
         } catch (IOException e) {
             System.err.println("Error sending error message: " + e.getMessage());
         }
     }
 
-    //message creation methods
     private ServerMessage createLoadGameMessage(GameData game) {
-        return new LoadGameMessage(game);
+        return new LoadGameMessage(game.game(), null);
     }
 
     private ServerMessage createNotificationMessage(String message) {
@@ -298,5 +346,4 @@ public class WebSocketHandler {
     private ServerMessage createErrorMessage(String errorMessage) {
         return new ErrorMessage(errorMessage);
     }
-
 }
