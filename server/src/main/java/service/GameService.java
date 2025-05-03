@@ -20,8 +20,6 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    //existing methods to define my business logic
-
     public int createGame(CreateGameRequest req, String authToken) throws DataAccessException {
         authDAO.getAuth(authToken);
         return gameDAO.createGame(req.gameName());
@@ -41,30 +39,34 @@ public class GameService {
         gameDAO.updateGame(updatedGame);
     }
 
+    public void updateGame(GameData updatedGame) throws DataAccessException {
+        gameDAO.updateGame(updatedGame);
+    }
+
     public AuthData getAuth(String authToken) throws DataAccessException {
         return authDAO.getAuth(authToken);
     }
 
-    public void clear(){
+    public void clear() {
         gameDAO.clear();
     }
 
     public void joinGame(String authToken, int gameID, String playerColor) throws DataAccessException {
-        var auth = authDAO.getAuth(authToken);  // val auth tok
-        GameData game = gameDAO.getGame(gameID);  // val game exist
+        var auth = authDAO.getAuth(authToken);
+        GameData game = gameDAO.getGame(gameID);
 
-        //val color
         if (playerColor == null || !List.of("WHITE", "BLACK").contains(playerColor.toUpperCase())) {
             throw new DataAccessException("Error: bad request");
         }
 
-        //val color avail
-        if (("WHITE".equalsIgnoreCase(playerColor) && game.whiteUsername() != null) ||
-            ("BLACK".equalsIgnoreCase(playerColor) && game.blackUsername() != null)) {
+        boolean whiteTaken = game.whiteUsername() != null && !game.whiteUsername().equals(auth.username());
+        boolean blackTaken = game.blackUsername() != null && !game.blackUsername().equals(auth.username());
+
+        if (("WHITE".equalsIgnoreCase(playerColor) && whiteTaken) ||
+            ("BLACK".equalsIgnoreCase(playerColor) && blackTaken)) {
             throw new DataAccessException("Error: already taken");
         }
 
-        //user to team color
         GameData updatedGame;
         if ("WHITE".equalsIgnoreCase(playerColor)) {
             updatedGame = new GameData(
@@ -72,7 +74,8 @@ public class GameService {
                     auth.username(),
                     game.blackUsername(),
                     game.gameName(),
-                    game.game()
+                    game.game(),
+                    game.gameOver()
             );
         } else {
             updatedGame = new GameData(
@@ -80,7 +83,8 @@ public class GameService {
                     game.whiteUsername(),
                     auth.username(),
                     game.gameName(),
-                    game.game()
+                    game.game(),
+                    game.gameOver()
             );
         }
 
@@ -94,46 +98,51 @@ public class GameService {
         if (auth == null || game == null) {
             throw new DataAccessException("Error: unauthorized or game not found");
         }
-
     }
 
     public GameData makeMove(String authToken, int gameId, ChessMove move) throws DataAccessException, InvalidMoveException {
         AuthData auth = getAuth(authToken);
-        GameData game = getGame(gameId); //get current game
+        GameData game = getGame(gameId);
 
-        game.game().makeMove(move); //apply the move
+        if (game.gameOver()) {
+            throw new DataAccessException("The game is over. No moves allowed.");
+        }
 
-        //record immutable. save and make new one
+        game.game().makeMove(move);
+
         GameData updatedGame = new GameData(
                 game.gameID(),
                 game.whiteUsername(),
                 game.blackUsername(),
                 game.gameName(),
-                game.game()
+                game.game(),
+                game.gameOver()
         );
 
-        updateGame(authToken, updatedGame);  //save to db
-
+        updateGame(authToken, updatedGame);
         return updatedGame;
     }
 
-    //I will enhance with resignation logic later
     public GameData resignGame(String authToken, int gameId) throws DataAccessException {
         AuthData auth = getAuth(authToken);
         GameData game = getGame(gameId);
 
-        if (!auth.username().equals(game.whiteUsername()) &&
-            !auth.username().equals(game.blackUsername())) {
-            throw new DataAccessException("You are not a player in this game.");
+        if (game.gameOver()) {
+            throw new DataAccessException("Game is already over.");
         }
 
-        //mark game as updated
+        if (!auth.username().equals(game.whiteUsername()) &&
+            !auth.username().equals(game.blackUsername())) {
+            throw new DataAccessException("Only players may resign.");
+        }
+
         GameData updatedGame = new GameData(
                 game.gameID(),
                 game.whiteUsername(),
                 game.blackUsername(),
                 game.gameName(),
-                game.game()
+                game.game(),
+                true
         );
 
         updateGame(authToken, updatedGame);
@@ -144,6 +153,4 @@ public class GameService {
         AuthData authData = authDAO.getAuth(authToken);
         return authData.username();
     }
-
-
 }

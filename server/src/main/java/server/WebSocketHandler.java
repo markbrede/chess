@@ -54,15 +54,33 @@ public class WebSocketHandler {
 
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
-
-        String username = sessionToUser.remove(session); //get username before rmv map
+        String username = sessionToUser.remove(session);
 
         for (Map.Entry<Integer, Set<Session>> entry : gameToSessions.entrySet()) {
             Integer gameId = entry.getKey();
             Set<Session> gameSessions = entry.getValue();
 
             if (gameSessions.remove(session) && username != null) {
-                //lets the other players know
+                try {
+                    GameData game = gameService.getGame(gameId);
+                    if (game != null) {
+                        String newWhite = username.equals(game.whiteUsername()) ? null : game.whiteUsername();
+                        String newBlack = username.equals(game.blackUsername()) ? null : game.blackUsername();
+
+                        GameData updatedGame = new GameData(
+                                game.gameID(),
+                                newWhite,
+                                newBlack,
+                                game.gameName(),
+                                game.game(),
+                                game.gameOver()
+                        );
+                        gameService.updateGame(updatedGame);
+                    }
+                } catch (DataAccessException e) {
+                    e.printStackTrace(); // Optional: replace with logging
+                }
+
                 for (Session otherSession : gameSessions) {
                     sendNotification(otherSession, username + " has disconnected");
                 }
@@ -70,9 +88,7 @@ public class WebSocketHandler {
         }
 
         for (Map.Entry<Integer, Set<Session>> entry : gameToObservers.entrySet()) {
-            Integer gameId = entry.getKey();
-            Set<Session> observerSessions = entry.getValue();
-            observerSessions.remove(session);
+            entry.getValue().remove(session);
         }
     }
 
@@ -180,8 +196,16 @@ public class WebSocketHandler {
             String authToken = command.getAuthToken();
             Integer gameId = command.getGameID();
 
-            if (gameInProgress.getOrDefault(gameId, true) == false) {
-                sendError(session, "The game is now over. No more moves are allowed naughty!.");
+            GameData game = gameService.getGame(gameId);
+            String username = sessionToUser.get(session);
+
+            if (username == null) {
+                sendError(session, "User not recognized for this session.");
+                return;
+            }
+
+            if (game.gameOver()) {
+                sendError(session, "The game is over. No moves allowed.");
                 return;
             }
 
@@ -189,33 +213,47 @@ public class WebSocketHandler {
                 sendError(session, "Invalid move command format.");
                 return;
             }
-            ChessMove move = ((MakeMoveCommand) command).getMove();
 
-            String username = sessionToUser.get(session);
-            if (username == null) {
-                sendError(session, "User not recognized for this sesh.");
+            ChessMove move = ((MakeMoveCommand) command).getMove();
+            ChessGame.TeamColor movingColor = game.game().getBoard().getPiece(move.getStartPosition()).getTeamColor();
+
+            //turn base logic enforced
+            if ((movingColor == ChessGame.TeamColor.WHITE && !username.equals(game.whiteUsername())) ||
+                (movingColor == ChessGame.TeamColor.BLACK && !username.equals(game.blackUsername()))) {
+                sendError(session, "You can't move for your opponent!");
                 return;
             }
 
-            GameData game = gameService.makeMove(authToken, gameId, move);
+            //make the move
+            GameData updatedGame = gameService.makeMove(authToken, gameId, move);
 
             for (Session s : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
-                sendGameState(s, game);
+                sendGameState(s, updatedGame);
                 if (!s.equals(session)) {
                     sendNotification(s, username + " made a move: " + move.toString());
                 }
             }
 
             for (Session observer : gameToObservers.getOrDefault(gameId, Set.of())) {
-                sendGameState(observer, game);
+                sendGameState(observer, updatedGame);
                 sendNotification(observer, username + " made a move: " + move.toString());
             }
 
-            if (isGameOver(game.game())) {
+            if (isGameOver(updatedGame.game())) {
+                gameInProgress.put(gameId, false);
+                GameData gameOverState = new GameData(
+                        updatedGame.gameID(),
+                        updatedGame.whiteUsername(),
+                        updatedGame.blackUsername(),
+                        updatedGame.gameName(),
+                        updatedGame.game(),
+                        true
+                );
+                gameService.updateGame(gameOverState);
+
                 for (Session s : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
                     sendNotification(s, "Game over!");
                 }
-                gameInProgress.put(gameId, false);
             }
         } catch (InvalidMoveException e) {
             sendError(session, "Invalid move: " + e.getMessage());
@@ -232,7 +270,25 @@ public class WebSocketHandler {
             Set<Session> gameSessions = gameToSessions.get(gameId);
             if (gameSessions != null) {
                 gameSessions.remove(session);
-                for (Session otherSession : gameSessions) {
+            }
+
+            // Remove user from game in the DB
+            GameData game = gameService.getGame(gameId);
+            if (game != null) {
+                String newWhite = username.equals(game.whiteUsername()) ? null : game.whiteUsername();
+                String newBlack = username.equals(game.blackUsername()) ? null : game.blackUsername();
+
+                GameData updatedGame = new GameData(
+                        game.gameID(),
+                        newWhite,
+                        newBlack,
+                        game.gameName(),
+                        game.game(),
+                        game.gameOver()
+                );
+                gameService.updateGame(updatedGame);
+
+                for (Session otherSession : gameToSessions.getOrDefault(gameId, new HashSet<>())) {
                     sendNotification(otherSession, username + " has left the game");
                 }
             }
@@ -243,27 +299,37 @@ public class WebSocketHandler {
 
     private void handleResign(Session session, UserGameCommand command) {
         try {
+            int gameID = command.getGameID();
             String authToken = command.getAuthToken();
-            Integer gameId = command.getGameID();
-            String username = sessionToUser.get(session);
-            if (username == null) {
-                sendError(session, "User not recognized for this session.");
+            String username = gameService.getUsernameFromAuth(authToken);
+
+            GameData game = gameService.getGame(gameID);
+
+            if (!username.equals(game.whiteUsername()) && !username.equals(game.blackUsername())) {
+                sendError(session, "Only players may resign.");
                 return;
             }
 
-            gameInProgress.put(gameId, false);
-
-            GameData updatedGame = gameService.resignGame(authToken, gameId);
-            notifyAllPlayers(gameId, updatedGame, session, "resigned from the game");
-
-            Set<Session> gameSessions = gameToSessions.get(gameId);
-            if (gameSessions != null) {
-                for (Session playerSession : gameSessions) {
-                    sendNotification(playerSession, username + " resigned from the game");
-                }
+            if (game.gameOver()) {
+                sendError(session, "Game is already over.");
+                return;
             }
+
+            GameData updatedGame = new GameData(
+                    game.gameID(),
+                    game.whiteUsername(),
+                    game.blackUsername(),
+                    game.gameName(),
+                    game.game(),
+                    true // mark it over
+            );
+            gameService.updateGame(updatedGame);
+
+            String resignMessage = username + " has resigned.";
+            broadcastToPlayersAndObservers(gameID, new NotificationMessage(resignMessage));
+
         } catch (Exception e) {
-            sendError(session, "Error resigning from game: " + e.getMessage());
+            sendError(session, "Failed to resign: " + e.getMessage());
         }
     }
 

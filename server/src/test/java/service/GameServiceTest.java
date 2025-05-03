@@ -52,10 +52,11 @@ public class GameServiceTest {
         //updated fields same id
         GameData updated = new GameData(
                 gameID,
-                "newWhite",       //new white player
-                "newBlack",       //new black player
-                "Updated Game",   //new name
-                original.game()   //original chess game state
+                "newWhite",
+                "newBlack",
+                "Updated Game",
+                original.game(),
+                original.gameOver() // likely false
         );
 
         //update game method
@@ -70,11 +71,12 @@ public class GameServiceTest {
     public void invalidGameUpdate() throws DataAccessException {
         String authToken = authDAO.makeAuth("testuser");
         GameData invalidGame = new GameData(
-                999,  //fake ID
+                999,  // fake ID
                 null,
                 null,
                 "Invalid Game",
-                new ChessGame()
+                new ChessGame(),
+                false  // not over (but irrelevant since it's invalid)
         );
 
         //needs to throw err cause it doesn't exist.

@@ -67,7 +67,8 @@ public class DBGameDAOTest {
                 "whiteUser",
                 original.blackUsername(),
                 original.gameName(),
-                original.game()
+                original.game(),
+                original.gameOver() // preserves current gameOver state (likely false)
         );
 
         gameDAO.updateGame(updated);
@@ -78,7 +79,7 @@ public class DBGameDAOTest {
 
     @Test
     public void failUpdateGameInvalidId() {
-        GameData fakeGame = new GameData(999, null, null, "Fake", new ChessGame());
+        GameData fakeGame = new GameData(999, null, null, "Fake", new ChessGame(), false);
 
         assertThrows(DataAccessException.class, () -> {
             gameDAO.updateGame(fakeGame);

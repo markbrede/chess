@@ -1,11 +1,14 @@
 package server;
+
 //**My server should be the entry point for all requests coming from the client.
 //It's like the front door of my chess application.
+
 import com.google.gson.Gson;
 import dataaccess.*;
 import service.GameService;
 import service.UserService;
 import spark.*;
+
 import java.util.Map;
 
 public class Server {
@@ -36,18 +39,22 @@ public class Server {
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
-        Spark.staticFiles.location("web");//where the HTML, CSS, JS will be served by the server
 
+        Spark.webSocket("/ws", new WebSocketHandler(gameService));
 
-        Spark.post("/user", userHandler::register); //user routes to register
-        Spark.post("/session", userHandler::login); //login (potentially buggy)
-        Spark.delete("/session", userHandler::logout); //logout
+        Spark.staticFiles.location("web");
+
+        // HTTP routes
+        Spark.post("/user", userHandler::register);
+        Spark.post("/session", userHandler::login);
+        Spark.delete("/session", userHandler::logout);
         Spark.get("/game", gameHandler::listGames);
         Spark.post("/game", gameHandler::createGame);
         Spark.put("/game", gameHandler::joinGame);
-        Spark.put("/game/observe/:gameID", gameHandler::observeGame);//needed separate route
-        Spark.delete("/db", this::clear); //db route to clear method
+        Spark.put("/game/observe/:gameID", gameHandler::observeGame);
+        Spark.delete("/db", this::clear);
 
+        // Error handling
         Spark.exception(UnauthorizedException.class, (e, req, res) -> {
             res.status(401);
             res.body(new Gson().toJson(Map.of("message", e.getMessage())));
@@ -58,14 +65,13 @@ public class Server {
             res.body(new Gson().toJson(Map.of("message", e.getMessage())));
         });
 
-
         Spark.awaitInitialization();
         return Spark.port();
     }
 
+
     public void stop() {
         Spark.stop();
-
         Spark.awaitStop();
     }
 

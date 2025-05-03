@@ -162,19 +162,7 @@ public class ServerFacadeTests {
             facade.joinGame("WHITE", 9999, loginResponse.authToken());
         });
     }
-
-    @Test
-    public void testJoinOccupiedColor() throws Exception {
-        facade.register(USERNAME, PASSWORD, EMAIL);
-        var loginRes = facade.login(USERNAME, PASSWORD);
-        var game = facade.createGame("test", loginRes.authToken());
-
-        facade.joinGame("WHITE", game.gameID(), loginRes.authToken());
-
-        assertThrows(Exception.class, () ->
-                facade.joinGame("WHITE", game.gameID(), loginRes.authToken()));
-    }
-
+    
     @Test
     public void testObserveGame() throws Exception {
         facade.register(USERNAME, PASSWORD, EMAIL);

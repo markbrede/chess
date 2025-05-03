@@ -1,19 +1,14 @@
 package dataaccess;
 
-import javax.xml.crypto.Data;
 import java.sql.*;
 import java.util.Properties;
 
 public class DatabaseManager {
-    //Will hold database configuration values loaded from a file
     private static final String DATABASE_NAME;
     private static final String USER;
     private static final String PASSWORD;
     private static final String CONNECTION_URL;
-    /**
-     * Static block runs once when the class is first loaded.
-     * It loads database configuration values from the db.properties file.
-     */
+
     static {
         try {
             try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties")) {
@@ -28,11 +23,9 @@ public class DatabaseManager {
                 USER = props.getProperty("db.user");
                 PASSWORD = props.getProperty("db.password");
 
-                //get the host and port to build the database connection URL
                 var host = props.getProperty("db.host");
                 var port = Integer.parseInt(props.getProperty("db.port"));
 
-                //make the JDBC connection URL for MySQL
                 CONNECTION_URL = String.format("jdbc:mysql://%s:%d", host, port);
             }
 
@@ -42,19 +35,13 @@ public class DatabaseManager {
         }
     }
 
-    /**
-     * Creates the database if it doesn't already exist.
-     * This is done by connecting to the MySQL server and executing a CREATE DATABASE statement.
-     */
     static void createDatabase() throws DataAccessException {
         try {
-
             var statement = "CREATE DATABASE IF NOT EXISTS " + DATABASE_NAME;
-
             var conn = DriverManager.getConnection(CONNECTION_URL, USER, PASSWORD);
 
             try (var preparedStatement = conn.prepareStatement(statement)) {
-                preparedStatement.executeUpdate(); // Run the SQL command
+                preparedStatement.executeUpdate();
             }
 
             createTables();
@@ -63,17 +50,10 @@ public class DatabaseManager {
         }
     }
 
-    /**
-     * Opens a connection to the database defined in the db.properties file.
-     * It sets the catalog (i.e., selects the database) after connecting.
-     * Always use try-with-resources to ensure the connection gets closed properly.
-     */
     static Connection getConnection() throws DataAccessException {
         try {
-            //connect to server
             var conn = DriverManager.getConnection(CONNECTION_URL, USER, PASSWORD);
             conn.setCatalog(DATABASE_NAME);
-
             return conn;
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
@@ -101,7 +81,8 @@ public class DatabaseManager {
             whiteUsername TEXT,
             blackUsername TEXT,
             gameName TEXT,
-            game TEXT
+            game TEXT,
+            gameOver BOOLEAN NOT NULL DEFAULT FALSE
         )
         """
         };
@@ -140,5 +121,4 @@ public class DatabaseManager {
             throw new DataAccessException(e.getMessage());
         }
     }
-
 }
