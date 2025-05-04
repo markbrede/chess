@@ -101,7 +101,7 @@ public class PostloginUI extends UI {
 
         try {
             CreateGameResponse response = facade.createGame(adjGameName, authToken);
-            displayMessage("Game created successfully with game ID number: " + response.gameID());
+            displayMessage("Game created successfully! Run 'list' to see it and join by number.");
         } catch (Exception e) {
             displayErrorMessage("Failed to create game: " + e.getMessage());
         }
@@ -116,7 +116,7 @@ public class PostloginUI extends UI {
                 displayMessage("No games available.");
             } else {
                 displayMessage("\nAvailable games:");
-                int index = 1;
+                int index = 1; //index to display game list
                 for (GameData game : gamesList) {
                     String whitePlayer = game.whiteUsername() != null ? game.whiteUsername() : "EMPTY";
                     String blackPlayer = game.blackUsername() != null ? game.blackUsername() : "EMPTY";
@@ -130,28 +130,30 @@ public class PostloginUI extends UI {
     }
 
     private void playGame() {
-        if (gamesList.isEmpty()) {
+        if (gamesList == null || gamesList.isEmpty()) {
             displayMessage("No games available. Use 'list' command to refresh the games list.");
             return;
         }
 
         try {
-            String gameNumberStr = promptUser("Please enter the game ID number: ");
-            int gameNumber = Integer.parseInt(gameNumberStr);
+            //I changed to ask for game number NOT the game id
+            String gameNumberStr = promptUser("Enter the number of the game to join (as shown in the list above): ");
+            int listIndex = Integer.parseInt(gameNumberStr);
 
-            if (gameNumber < 1 || gameNumber > gamesList.size()) {
-                displayErrorMessage("invalid game ID number.");
+            if (listIndex < 1 || listIndex > gamesList.size()) {
+                displayErrorMessage("Invalid game number. Use the number shown in the list.");
                 return;
             }
 
-            GameData selectedGame = gamesList.get(gameNumber - 1);
+            //for getting the  actual GameData using list index
+            GameData selectedGame = gamesList.get(listIndex - 1);
 
             if (selectedGame.game() == null) {
                 displayErrorMessage("The board could not be generated due to no available game data.");
                 return;
             }
 
-            String color = promptUser("Color (WHITE/BLACK): ").toUpperCase().trim(); //added trim
+            String color = promptUser("Color (WHITE/BLACK): ").toUpperCase().trim();
             if (!color.equals("WHITE") && !color.equals("BLACK")) {
                 displayErrorMessage("Invalid color. You must choose WHITE or BLACK.");
                 return;
@@ -169,11 +171,10 @@ public class PostloginUI extends UI {
 
             displayMessage("You successfully joined the game as the " + color + " player.");
 
-            //draws board
             ChessBoardUI chessboardUI = new ChessBoardUI();
             chessboardUI.drawBoard(color.equals("WHITE"), selectedGame.game());
 
-            promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
+            promptUser("\nPress Enter to go back to the menu...");
 
         } catch (NumberFormatException e) {
             displayErrorMessage("Invalid format for game number");
@@ -183,21 +184,23 @@ public class PostloginUI extends UI {
     }
 
     private void observeGame() {
-        if (gamesList.isEmpty()) {
-            displayMessage("No games are available. Enter 'list' to refresh the games list.");
+        if (gamesList == null || gamesList.isEmpty()) {
+            displayMessage("You need to list the available games first. Use the 'list' command to see your options.");
+
             return;
         }
 
         try {
-            String gameNumberStr = promptUser("Please enter the game ID number: ");
-            int gameNumber = Integer.parseInt(gameNumberStr);
+            //changed from entering game id to entering game list index
+            String gameNumberStr = promptUser("Enter the number of the game to observe (as shown in the list above): ");
+            int listIndex = Integer.parseInt(gameNumberStr);
 
-            if (gameNumber < 1 || gameNumber > gamesList.size()) {
-                displayErrorMessage("Invalid game ID number.");
+            if (listIndex < 1 || listIndex > gamesList.size()) {
+                displayErrorMessage("Invalid game number. Use the number shown in the list.");
                 return;
             }
-
-            GameData selectedGame = gamesList.get(gameNumber - 1);
+            //now maps list number to the correct GameData and extract the real game id
+            GameData selectedGame = gamesList.get(listIndex - 1);
             int gameID = selectedGame.gameID();
 
             if (selectedGame.game() == null) {
@@ -205,22 +208,22 @@ public class PostloginUI extends UI {
                 return;
             }
 
-            //joining a game as an observer
+            //null color for observer.
             facade.joinGame(null, gameID, authToken);
-            GameData updatedGame = facade.getGame(gameID, authToken);  // Fixed variable name
+            GameData updatedGame = facade.getGame(gameID, authToken);
 
             displayMessage("You've joined the game as an observer.");
 
             ChessBoardUI chessboardUI = new ChessBoardUI();
-            chessboardUI.drawBoard(true, updatedGame.game());  // Now using fresh data
+            chessboardUI.drawBoard(true, updatedGame.game());  // Observers view from white's perspective
 
-
-            promptUser("\nPress Enter to go back to the menu..."); //user must press enter to continue
+            promptUser("\nPress Enter to go back to the menu...");
 
         } catch (NumberFormatException e) {
-            displayErrorMessage("Invalid format for game ID number");
+            displayErrorMessage("Invalid format for game number");
         } catch (Exception e) {
             displayErrorMessage("Could not observe game. There was a " + e.getMessage());
         }
     }
+
 }

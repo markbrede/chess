@@ -11,52 +11,60 @@ public class ChessBoardUI {
         System.out.println("Chess Game");
         System.out.println();
 
+        // Top column labels
+        System.out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_BLACK);
         drawColumnLabels(isWhitePerspective);
 
-        //needs to draw board/ board rows
-        for (int row = 8; row >= 1; row--) {
-            int displayRow = isWhitePerspective ? row : 9 - row;
+        int start = isWhitePerspective ? 8 : 1;
+        int end = isWhitePerspective ? 0 : 9;
+        int step = isWhitePerspective ? -1 : 1;
 
-            drawRowLabel(displayRow);
+        for (int row = start; row != end; row += step) {
+            // Row label (left)
+            System.out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+            System.out.print(EscapeSequences.SET_TEXT_COLOR_BLACK);
+            drawRowLabel(row);
 
             for (int col = 1; col <= 8; col++) {
                 int displayCol = isWhitePerspective ? col : 9 - col;
 
-                //determine square color... row+col is even = white squares
-                boolean isLightSquare = (displayRow + displayCol) % 2 == 0;
+                boolean isLightSquare = (row + displayCol) % 2 != 0;
 
-                //set the background color
                 if (isLightSquare) {
-                    System.out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);
+                    System.out.print(EscapeSequences.SET_BG_COLOR_YELLOW);  // light square
                 } else {
-                    System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);
+                    System.out.print(EscapeSequences.SET_BG_COLOR_DARK_GREEN);  // dark square
                 }
 
-                //at this position, get a piece.
-                ChessPosition position = new ChessPosition(displayRow, displayCol);
+                ChessPosition position = new ChessPosition(row, displayCol);
                 ChessPiece piece = game.getBoard().getPiece(position);
 
-                //draw a piece
                 if (piece == null) {
                     System.out.print(EscapeSequences.EMPTY);
                 } else {
-                    drawPiece(piece); //else empty square
+                    drawPiece(piece);  // sets its own text color
                 }
             }
 
-            //bg reset
-            System.out.print(EscapeSequences.RESET_BG_COLOR);
-            drawRowLabel(displayRow); // after back color reset, add row label at end
+            // Reset & draw row label (right)
+            System.out.print(EscapeSequences.RESET_TEXT_COLOR);
+            System.out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+            System.out.print(EscapeSequences.SET_TEXT_COLOR_BLACK);
+            drawRowLabel(row);
             System.out.println();
         }
 
-        //should draw column labels
+        // Bottom column labels
+        System.out.print(EscapeSequences.SET_BG_COLOR_BLUE);
+        System.out.print(EscapeSequences.SET_TEXT_COLOR_BLACK);
         drawColumnLabels(isWhitePerspective);
 
-        // Reset all formatting
+        // Final formatting reset
         System.out.print(EscapeSequences.RESET_BG_COLOR);
         System.out.print(EscapeSequences.RESET_TEXT_COLOR);
     }
+
 
     private void clearScreen() {
         System.out.print(EscapeSequences.ERASE_SCREEN);
